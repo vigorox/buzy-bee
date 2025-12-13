@@ -1,7 +1,7 @@
 // Service Worker for PWA
 // ⚠️ IMPORTANT: Update version EVERY TIME you upload new files to force cache update!
 // Example: 'buzybee-v1.0.1-20251205' or 'buzybee-v1.0.0-20251206'
-const CACHE_NAME = 'buzybee-v1.0.7-20251205'; // Update version with timestamp to force cache update
+const CACHE_NAME = 'buzybee-v1.0.8-20251213'; // Update version with timestamp to force cache update
 const urlsToCache = [
   './',
   './index.html',

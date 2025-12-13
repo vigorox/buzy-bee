@@ -231,8 +231,25 @@ button {
 
 .pronunciation-info p {
     font-size: 1.5em;
-    color: var(--primary-color);
+    color: black;
     margin-bottom: 10px;
+}
+
+/* Game header: align icon and title */
+.game-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.game-header h1 {
+    margin: 0;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.5em;
 }
 
 .repeat-count {
