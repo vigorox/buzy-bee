@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Practice English vocabulary with pronunciation and spelling">
+    <meta name="theme-color" content="#FACB1C">
+    
+    <!-- iOS meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BuzyBee">
+    
+    <!-- iOS icons -->
+    <link rel="apple-touch-icon" href="assets/icon/buzy-bee-icon-512.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="256x256" href="assets/icon/buzy-bee-icon-256.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon/buzy-bee-icon-512.png">
+    
+    <title>English Vocabulary Practice</title>
+    <link rel="stylesheet" href="style.css?v=1.0.7">
+    <script src="decks.js?v=1.0.7"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Page -->
+        <div id="mainPage" class="page active">
+            <img src="assets/icon/buzy-bee-icon-256.png" alt="buzybee Icon" style="display:block; margin: 0 auto 20px; width: 100px; height: 100px;">
+            <h1>English Vocabulary Practice</h1>
+            
+            <!-- Section 1: Load Deck -->
+            <div class="section-card">
+                <h2>📚 Select Deck</h2>
+                <div class="deck-select-container">
+                    <select id="deckSelect">
+                        <option value="">Loading decks...</option>
+                    </select>
+                    <button id="loadDeckBtn" class="primary-btn btn-auto">Load Deck</button>
+                </div>
+            </div>
+
+            <!-- Section 2: Vocabulary List -->
+            <div class="section-card" id="wordListSection">
+                <div class="section-header">
+                    <h2>📝 Vocabulary List (<span id="wordCount">0</span> words)</h2>
+                    <button id="openImportBtn" class="secondary-btn btn-auto-small">📥 Import</button>
+                </div>
+                <div id="wordList" class="word-list"></div>
+                <div id="emptyState">
+                    <p>📚 No vocabulary yet</p>
+                    <p>Select a deck above or click "Import" to add words</p>
+                </div>
+            </div>
+
+            <!-- Section 3: Unmemorized Words -->
+            <div class="section-card hidden" id="unmemorizedSection">
+                <div class="section-header">
+                    <h2>❌ Unmemorized Words (<span id="unmemorizedCount">0</span> words)</h2>
+                    <div class="button-group">
+                        <button id="practiceUnmemorizedBtn" class="primary-btn btn-auto-small">📖 Practice</button>
+                        <button id="clearUnmemorizedBtn" class="warn-btn btn-auto-small">🗑️ Clear</button>
+                    </div>
+                </div>
+                <div id="unmemorizedList" class="word-list"></div>
+            </div>
+
+            <!-- Section 4: Game Settings -->
+            <div class="section-card hidden" id="settingsSection">
+                <h2>⚙️ Game Settings</h2>
+                
+                <div class="setting-item">
+                    <label>
+                        <input type="checkbox" id="randomizeCheckbox" checked>
+                        Randomize order
+                    </label>
+                </div>
+
+                <div class="setting-item">
+                    <label for="pronounceCount">Pronunciation times:</label>
+                    <select id="pronounceCount">
+                        <option value="1">1 time</option>
+                        <option value="2" selected>2 times</option>
+                        <option value="3">3 times</option>
+                        <option value="4">4 times</option>
+                        <option value="5">5 times</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label for="pronounceInterval">Pronunciation interval:</label>
+                    <select id="pronounceInterval">
+                        <option value="1500">Slow</option>
+                        <option value="800" selected>Medium</option>
+                        <option value="100">Fast</option>
+                    </select>
+                </div>
+
+                <div class="setting-item">
+                    <label for="voiceSelect">Voice:</label>
+                    <select id="voiceSelect">
+                        <option value="">Loading voices...</option>
+                    </select>
+                </div>
+
+                <button id="startBtn" class="primary-btn">🚀 Start Game</button>
+            </div>
+        </div>
+
+        <!-- Import Modal -->
+        <div id="importModal" class="modal">
+            <div class="modal-content import-modal-content">
+                <h2 class="import-modal-heading">📥 Import Vocabulary</h2>
+                
+                <!-- Method 1: Manual Input (Best for iOS) -->
+                <div class="import-method import-method-1">
+                    <p>✏️ Enter or Paste Words</p>
+                    <p>Recommended for iOS: Copy your word list and paste here</p>
+                    <textarea id="manualInput" placeholder="apple, banana, cat, dog..." rows="5"></textarea>
+                    <button id="addWordsBtn" class="primary-btn btn-margin-top">Add Words</button>
+                </div>
+                
+                <!-- Method 2: File Upload -->
+                <div class="import-method import-method-2">
+                    <p>📁 Upload File</p>
+                    <p>CSV or TXT file (words separated by comma or new line)</p>
+                    <input type="file" id="fileInput" accept=".csv,.txt,text/plain,text/csv">
+                </div>
+                
+                <!-- Method 3: Sample Data -->
+                <div class="sample-data-container">
+                    <button id="loadSampleBtn" class="secondary-btn btn-full-width">Load Sample Data (3 words)</button>
+                </div>
+
+                <button id="closeImportBtn" class="secondary-btn btn-full-width">Close</button>
+            </div>
+        </div>
+
+        <!-- Game Page -->
+        <div id="gamePage" class="page">
+            <div class="game-header">
+                <h1>🎮 Practice Time</h1>
+                <button id="exitGameBtn" class="secondary-btn btn-auto-small">❌ Exit</button>
+            </div>
+            
+            <div class="progress">
+                <p>Word <span id="currentWord">1</span> of <span id="totalWords">0</span></p>
+            </div>
+
+            <div id="pronunciationPhase" class="phase">
+                <div class="pronunciation-info">
+                    <p>🔊 Listening...</p>
+                    <p class="repeat-count">Repeat <span id="currentRepeat">1</span> of <span id="totalRepeats">2</span></p>
+                </div>
+                <button id="skipBtn" class="secondary-btn">Skip Remaining</button>
+            </div>
+
+            <div id="answerPhase" class="phase hidden">
+                <p class="prompt">Type what you heard:</p>
+                <input type="text" id="answerInput" placeholder="Enter the word..." autocomplete="off">
+                <div class="repeat-button-container">
+                    <button id="repeatBtn" class="secondary-btn btn-full-width">🔊 Repeat</button>
+                </div>
+                <div class="answer-buttons">
+                    <button id="okBtn" class="primary-btn">OK</button>
+                    <button id="knowBtn" class="success-btn">I Know It!</button>
+                    <button id="dontKnowBtn" class="warn-btn">I Don't Know!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Modal -->
+        <div id="feedbackModal" class="modal">
+            <div class="modal-content">
+                <div class="feedback-message" id="feedbackMessage"></div>
+                <div id="feedbackButtons" class="feedback-buttons">
+                    <button id="feedbackOkBtn" class="primary-btn">OK</button>
+                </div>
+                <div id="feedbackButtonsWithWrong" class="feedback-buttons hidden">
+                    <button id="feedbackWrongBtn" class="warn-btn">I Got It Wrong!</button>
+                    <button id="feedbackOkBtn2" class="primary-btn">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spelling Warning Modal -->
+        <div id="spellingModal" class="modal">
+            <div class="modal-content">
+                <h2 class="spelling-warning-heading">⚠️ Spelling Check Warning</h2>
+                <p class="spelling-text">The following words may have spelling issues:</p>
+                <div id="suspiciousWords"></div>
+                <p class="spelling-proceed-text">Do you want to proceed anyway?</p>
+                <div class="button-group">
+                    <button id="spellingCancelBtn" class="secondary-btn">Cancel</button>
+                    <button id="spellingProceedBtn" class="primary-btn">Proceed</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Result Page -->
+        <div id="resultPage" class="page">
+            <h1>🎉 Results</h1>
+            
+            <div class="result-summary">
+                <p class="score"><span id="correctCount">0</span>/<span id="totalCount">0</span></p>
+                <p class="message" id="resultMessage"></p>
+            </div>
+
+            <div class="result-details">
+                <h3>Details:</h3>
+                <div id="resultList"></div>
+            </div>
+
+            <button id="backBtn" class="primary-btn">Back to Main Page</button>
+        </div>
+    </div>
+
+    <script src="app.js?v=1.0.7"></script>
+    <script>
+        // Register Service Worker for PWA with update handling
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration);
+                        
+                        // Check for updates every time the page loads
+                        registration.update();
+                        
+                        // Handle updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available, show update notification
+                                    if (confirm('New version available! Click OK to update.')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+                
+                // Reload page when new service worker takes control
+                navigator.serviceWorker.addEventListener('controllerchange', () => {
+                    window.location.reload();
+                });
+            });
+        }
+    </script>
+</body>
+</html>
