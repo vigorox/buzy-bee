@@ -1,5 +1,7 @@
 # Buzy Bee
 
+<p align="center"><img src="public/assets/icon/buzy-bee-icon-256.png" width="120" alt="Buzy Bee"></p>
+
 A simple vocabulary practice web application that can run directly from your file system - no server needed!
 
 ## Features
