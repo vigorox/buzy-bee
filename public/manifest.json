@@ -1,6 +1,6 @@
 {
-  "name": "Buzy Bee",
-  "short_name": "buzy-bee",
+  "name": "BuzyBee Spell",
+  "short_name": "BuzyBee Spell",
   "description": "Practice English vocabulary with pronunciation and spelling",
   "start_url": "./",
   "display": "standalone",

@@ -1,6 +1,6 @@
-# Buzy Bee
+# BuzyBee Spell
 
-<p align="center"><img src="public/assets/icon/buzy-bee-icon-256.png" width="120" alt="Buzy Bee"></p>
+<p align="center"><img src="public/assets/icon/buzy-bee-icon-256.png" width="120" alt="BuzyBee Spell"></p>
 
 A simple vocabulary practice web application that can run directly from your file system - no server needed!
 
