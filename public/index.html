@@ -38,13 +38,16 @@
     />
 
     <title>BuzyBee Spell - English Vocabulary Practice</title>
-    
+
     <!-- 先加载版本配置 -->
     <script src="version.js"></script>
-    
+
     <!-- 使用版本号加载资源 -->
     <script>
-      document.write(`<link rel="stylesheet" href="style.css?v=${APP_VERSION}" />`);
+      document.write(
+        `<link rel="stylesheet" href="style.css?v=${APP_VERSION}" />`
+      );
+      document.write(`<script src="dialog.js?v=${APP_VERSION}"><\/script>`);
       document.write(`<script src="decks.js?v=${APP_VERSION}"><\/script>`);
     </script>
   </head>
@@ -52,18 +55,16 @@
     <div class="container">
       <!-- Main Page -->
       <div id="mainPage" class="page active">
-        <img
-          src="assets/icon/buzy-bee-icon-256.png"
-          alt="buzybee Icon"
-          style="
-            display: block;
-            margin: 0 auto 20px;
-            width: 100px;
-            height: 100px;
-          "
-        />
-        <h1>BuzyBee Spell</h1>
-        <h2 style="text-align: center">English Vocabulary Practice</h2>
+        <h1 class="app-header">
+          <img
+            src="assets/icon/buzy-bee-icon-256.png"
+            alt="buzybee Icon"
+            style="
+              width: 90px;
+              height: 90px;
+            "
+          />BuzyBee Spell
+        </h1>
 
         <!-- Section 1: Load Deck -->
         <div class="section-card">
@@ -73,7 +74,7 @@
               <option value="">Loading decks...</option>
             </select>
           </div>
-          <div class="button-group">
+          <div class="flex-row mv-10">
             <button id="loadDeckBtn" class="primary-btn">Load Deck</button>
           </div>
         </div>
@@ -82,9 +83,9 @@
         <div class="section-card" id="wordListSection">
           <div class="section-header">
             <h2>📝 Vocabulary List (<span id="wordCount">0</span> words)</h2>
-            <button id="openImportBtn" class="secondary-btn btn-auto-small">
-              📥 Import
-            </button>
+          </div>
+          <div class="flex-row mv-10">
+            <button id="openImportBtn" class="secondary-btn">📥 Import</button>
           </div>
           <div id="wordList" class="word-list"></div>
           <div id="emptyState">
@@ -101,7 +102,7 @@
             </h2>
           </div>
           <div id="unmemorizedList" class="word-list"></div>
-          <div class="button-group">
+          <div class="flex-row mv-10">
             <button
               id="practiceUnmemorizedBtn"
               class="primary-btn btn-auto-small"
@@ -152,7 +153,7 @@
             </select>
           </div>
 
-          <div class="button-group">
+          <div class="flex-row mv-10">
             <button id="startBtn" class="primary-btn">🚀 Start Game</button>
           </div>
         </div>
@@ -215,7 +216,7 @@
                 margin-right: 8px;
               "
             />
-            Practice Time
+            Practice
           </h1>
           <button id="exitGameBtn" class="secondary-btn btn-auto-small">
             ❌ Exit
@@ -242,22 +243,31 @@
 
         <div id="answerPhase" class="phase hidden">
           <p class="prompt">Type what you heard:</p>
-          <input
-            type="text"
-            id="answerInput"
-            placeholder="Enter the word..."
-            autocorrect="off"
-            autocapitalize="none"
-            autocomplete="off"
-            spellcheck="false"
-          />
+
+          <div class="flex-row mv-10">
+            <input
+              type="text"
+              id="answerInput"
+              placeholder="Enter the word..."
+              autocorrect="off"
+              autocapitalize="none"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="okBtn" class="primary-btn">OK</button>
+          </div>
+
+          <div class="answer-buttons"></div>
           <div class="repeat-button-container">
             <button id="repeatBtn" class="secondary-btn btn-full-width">
               🔊 Repeat
             </button>
           </div>
-          <div class="answer-buttons">
-            <button id="okBtn" class="primary-btn">OK</button>
+
+          <hr />
+
+          <h2>OR</h2>
+          <div class="flex-row mv-10">
             <button id="knowBtn" class="success-btn">I Know It!</button>
             <button id="dontKnowBtn" class="warn-btn">I Don't Know!</button>
           </div>
@@ -289,7 +299,7 @@
           </p>
           <div id="suspiciousWords"></div>
           <p class="spelling-proceed-text">Do you want to proceed anyway?</p>
-          <div class="button-group">
+          <div class="flex-row mv-10">
             <button id="spellingCancelBtn" class="secondary-btn">Cancel</button>
             <button id="spellingProceedBtn" class="primary-btn">Proceed</button>
           </div>
@@ -320,7 +330,7 @@
     <script>
       document.write(`<script src="app.js?v=${APP_VERSION}"><\/script>`);
     </script>
-    
+
     <script>
       // Register Service Worker for PWA with update handling
       if ("serviceWorker" in navigator) {
@@ -336,13 +346,18 @@
               // Handle updates
               registration.addEventListener("updatefound", () => {
                 const newWorker = registration.installing;
-                newWorker.addEventListener("statechange", () => {
+                newWorker.addEventListener("statechange", async () => {
                   if (
                     newWorker.state === "installed" &&
                     navigator.serviceWorker.controller
                   ) {
                     // New service worker available, show update notification
-                    if (confirm("New version available! Click OK to update.")) {
+                    if (
+                      await Dialog.confirm(
+                        "New version available! Click OK to update.",
+                        "🎉 Update Available"
+                      )
+                    ) {
                       newWorker.postMessage({ type: "SKIP_WAITING" });
                       window.location.reload();
                     }

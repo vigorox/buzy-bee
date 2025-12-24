@@ -132,7 +132,7 @@ function handleFileUpload(e) {
 }
 
 // Parse vocabulary from file content
-function parseVocabulary(content) {
+async function parseVocabulary(content) {
   // Split by newlines and commas
   const words = content
     .split(/[\n,]+/)
@@ -140,7 +140,7 @@ function parseVocabulary(content) {
     .filter((word) => word.length > 0);
 
   if (words.length === 0) {
-    alert("No words found in the file!");
+    await Dialog.alert("No words found in the file!");
     return;
   }
 
@@ -184,12 +184,12 @@ function displayUnmemorized() {
 }
 
 // Load sample data
-function loadSampleData() {
+async function loadSampleData() {
   // Show confirmation dialog
   if (
-    !confirm(
+    !(await Dialog.confirm(
       "This will replace your current vocabulary list with sample data. Continue?"
-    )
+    ))
   ) {
     return;
   }
@@ -198,7 +198,7 @@ function loadSampleData() {
   saveToLocalStorage();
   displayVocabulary();
   closeImportModal();
-  alert("Sample data loaded successfully!");
+  await Dialog.alert("Sample data loaded successfully!");
 }
 
 // Open import modal
@@ -214,11 +214,11 @@ function closeImportModal() {
 }
 
 // Add words manually
-function addManualWords() {
+async function addManualWords() {
   const input = manualInput.value.trim();
 
   if (!input) {
-    alert("Please enter some words!");
+    await Dialog.alert("Please enter some words!");
     return;
   }
 
@@ -229,7 +229,7 @@ function addManualWords() {
     .filter((word) => word.length > 0);
 
   if (newWords.length === 0) {
-    alert("No valid words found!");
+    await Dialog.alert("No valid words found!");
     return;
   }
 
@@ -237,7 +237,7 @@ function addManualWords() {
   const invalidWords = newWords.filter((word) => !/^[a-zA-Z\s'-]+$/.test(word));
 
   if (invalidWords.length > 0) {
-    alert(
+    await Dialog.alert(
       `Invalid words detected: ${invalidWords.join(
         ", "
       )}\n\nWords should only contain letters, spaces, hyphens, or apostrophes.`
@@ -252,7 +252,7 @@ function addManualWords() {
   );
 
   if (wordsToAdd.length === 0) {
-    alert("All words are already in the vocabulary list!");
+    await Dialog.alert("All words are already in the vocabulary list!");
     return;
   }
 
@@ -409,7 +409,7 @@ async function checkSpellingAndAdd(words) {
     displayVocabulary();
     manualInput.value = "";
     closeImportModal();
-    alert(`Successfully added ${words.length} word(s)!`);
+    await Dialog.alert(`Successfully added ${words.length} word(s)!`);
   }
 }
 
@@ -442,7 +442,7 @@ function cancelSpelling() {
 }
 
 // Proceed with spelling - accept the words
-function proceedWithSpelling() {
+async function proceedWithSpelling() {
   spellingModal.classList.remove("show");
 
   if (pendingWords.length > 0) {
@@ -456,7 +456,7 @@ function proceedWithSpelling() {
       // Adding to existing vocabulary
       vocabulary = [...vocabulary, ...wordsToAdd];
       closeImportModal();
-      alert(`Successfully added ${wordsToAdd.length} word(s)!`);
+      await Dialog.alert(`Successfully added ${wordsToAdd.length} word(s)!`);
     } else {
       // Replacing vocabulary (file upload)
       vocabulary = pendingWords;
@@ -472,9 +472,9 @@ function proceedWithSpelling() {
 }
 
 // Start game
-function startGame() {
+async function startGame() {
   if (vocabulary.length === 0) {
-    alert("Please upload vocabulary first!");
+    await Dialog.alert("Please upload vocabulary first!");
     return;
   }
 
@@ -780,8 +780,8 @@ function backToMain() {
 }
 
 // Exit game during practice
-function exitGame() {
-  if (confirm("Exit game? Your progress will not be saved.")) {
+async function exitGame() {
+  if (await Dialog.confirm("Exit game? Your progress will not be saved.")) {
     synth.cancel();
     showPage("main");
   }
@@ -832,9 +832,9 @@ function removeFromUnmemorized(word) {
   }
 }
 
-function practiceUnmemorized() {
+async function practiceUnmemorized() {
   if (unmemorizedWords.length === 0) {
-    alert("No unmemorized words to practice!");
+    await Dialog.alert("No unmemorized words to practice!");
     return;
   }
 
@@ -865,17 +865,17 @@ function practiceUnmemorized() {
   playCurrentWord();
 }
 
-function clearUnmemorized() {
+async function clearUnmemorized() {
   if (unmemorizedWords.length === 0) {
-    alert("No unmemorized words to clear!");
+    await Dialog.alert("No unmemorized words to clear!");
     return;
   }
 
-  if (confirm(`Clear all ${unmemorizedWords.length} unmemorized words?`)) {
+  if (await Dialog.confirm(`Clear all ${unmemorizedWords.length} unmemorized words?`)) {
     unmemorizedWords = [];
     saveUnmemorizedToLocalStorage();
     displayUnmemorized();
-    alert("Unmemorized words cleared!");
+    await Dialog.alert("Unmemorized words cleared!");
   }
 }
 
@@ -1011,23 +1011,23 @@ function handleVoiceChange() {
 }
 
 // Load selected deck
-function loadSelectedDeck() {
+async function loadSelectedDeck() {
   const selectedIndex = deckSelect.value;
   
   if (!selectedIndex) {
-    alert('Please select a deck!');
+    await Dialog.alert('Please select a deck!');
     return;
   }
   
   const deck = availableDecks[selectedIndex];
   
   if (!deck) {
-    alert('Invalid deck selected!');
+    await Dialog.alert('Invalid deck selected!');
     return;
   }
   
   // Show confirmation dialog
-  if (!confirm(`Load "${deck.title}"?\n\nThis will replace your current vocabulary list.`)) {
+  if (!(await Dialog.confirm(`Load "${deck.title}"?\n\nThis will replace your current vocabulary list.`))) {
     return;
   }
   
@@ -1038,12 +1038,12 @@ function loadSelectedDeck() {
     .filter(word => word.length > 0);
   
   if (words.length === 0) {
-    alert('No words found in the deck!');
+    await Dialog.alert('No words found in the deck!');
     return;
   }
   
   vocabulary = words;
   saveToLocalStorage();
   displayVocabulary();
-  alert(`Successfully loaded "${deck.title}" with ${words.length} word(s)!`);
+  await Dialog.alert(`Successfully loaded "${deck.title}" with ${words.length} word(s)!`);
 }

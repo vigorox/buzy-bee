@@ -9,6 +9,7 @@ const urlsToCache = [
   './index.html',
   './style.css',
   './app.js',
+  './dialog.js',
   './decks.js',
   './version.js',
   './assets/icon/buzy-bee-icon-512.png',
