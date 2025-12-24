@@ -346,18 +346,13 @@
               // Handle updates
               registration.addEventListener("updatefound", () => {
                 const newWorker = registration.installing;
-                newWorker.addEventListener("statechange", async () => {
+                newWorker.addEventListener("statechange", () => {
                   if (
                     newWorker.state === "installed" &&
                     navigator.serviceWorker.controller
                   ) {
                     // New service worker available, show update notification
-                    if (
-                      await Dialog.confirm(
-                        "New version available! Click OK to update.",
-                        "🎉 Update Available"
-                      )
-                    ) {
+                    if (confirm("New version available! Click OK to update.")) {
                       newWorker.postMessage({ type: "SKIP_WAITING" });
                       window.location.reload();
                     }
