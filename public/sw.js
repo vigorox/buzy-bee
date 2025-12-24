@@ -1,13 +1,16 @@
+// 导入版本配置
+importScripts('./version.js');
+
 // Service Worker for PWA
-// ⚠️ IMPORTANT: Update version EVERY TIME you upload new files to force cache update!
-// Example: 'buzybee-v1.0.1-20251205' or 'buzybee-v1.0.0-20251206'
-const CACHE_NAME = 'buzybee-v1.1.0-20251224'; // Update version with timestamp to force cache update
+// ⚠️ IMPORTANT: Update version in version.js to force cache update!
+const CACHE_NAME = `buzybee-v${APP_VERSION}`;
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './app.js',
   './decks.js',
+  './version.js',
   './assets/icon/buzy-bee-icon-512.png',
   './assets/icon/buzy-bee-icon-256.png',
   './manifest.json'
