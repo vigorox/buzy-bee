@@ -637,3 +637,17 @@ hr {
   border-top: 1px solid #e5e7eb;
   margin: 20px 0;
 }
+
+
+
+
+/* 移动端调整 */
+@media (max-width: 480px) {
+  .flex-row {
+    flex-direction: column; /* 小屏幕改为垂直排列 */
+  }
+  
+  .flex-row button {
+    width: 100%;
+  }
+}
