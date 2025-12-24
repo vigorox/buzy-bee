@@ -586,7 +586,7 @@ function repeatPronunciation() {
 function showAnswerPhase() {
   pronunciationPhase.style.display = "none";
   answerPhase.style.display = "block";
-  answerInput.focus();
+  // answerInput.focus();
 }
 
 // Submit answer
