@@ -6,7 +6,7 @@
   "display": "standalone",
   "background_color": "#FFF7FA",
   "theme_color": "#FFF7FA",
-  "orientation": "portrait",
+  "orientation": "any",
   "icons": [
     {
       "src": "assets/icon/buzy-bee-icon-512.png",
