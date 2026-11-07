@@ -92,7 +92,10 @@
             <p>📚 No vocabulary yet</p>
             <p>Pick a deck above or click "Import" to add words</p>
           </div>
-          <button id="openImportBtn" class="secondary-btn btn-full-width btn-margin-top">📥 Import my own words</button>
+          <div class="vocab-actions">
+            <button id="openImportBtn" class="secondary-btn">📥 Import</button>
+            <button id="startBtn" class="primary-btn">🚀 Start Game</button>
+          </div>
         </div>
 
         <!-- Section 3: Unmemorized Words -->
@@ -149,13 +152,12 @@
 
           <div class="setting-item">
             <label for="voiceSelect">Voice:</label>
-            <select id="voiceSelect">
-              <option value="">Loading voices...</option>
-            </select>
-          </div>
-
-          <div class="flex-row mv-10">
-            <button id="startBtn" class="primary-btn">🚀 Start Game</button>
+            <div class="deck-picker">
+              <select id="voiceSelect">
+                <option value="">Loading voices...</option>
+              </select>
+              <button id="testVoiceBtn" class="secondary-btn">🔊 Test</button>
+            </div>
           </div>
         </div>
       </div>

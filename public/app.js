@@ -49,6 +49,7 @@ const pronounceCountSelect = document.getElementById("pronounceCount");
 const pronounceIntervalSelect = document.getElementById("pronounceInterval");
 const voiceSelect = document.getElementById("voiceSelect");
 const startBtn = document.getElementById("startBtn");
+const testVoiceBtn = document.getElementById("testVoiceBtn");
 
 const currentWordSpan = document.getElementById("currentWord");
 const totalWordsSpan = document.getElementById("totalWords");
@@ -121,6 +122,7 @@ backBtn.addEventListener("click", backToMain);
 practiceUnmemorizedBtn.addEventListener("click", practiceUnmemorized);
 clearUnmemorizedBtn.addEventListener("click", clearUnmemorized);
 voiceSelect.addEventListener("change", handleVoiceChange);
+testVoiceBtn.addEventListener("click", testVoice);
 answerInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") submitAnswer();
 });
@@ -162,12 +164,14 @@ function displayVocabulary() {
     wordList.style.display = "none";
     emptyState.style.display = "block";
     settingsSection.style.display = "none";
+    startBtn.style.display = "none";
     return;
   }
 
   wordList.style.display = "flex";
   emptyState.style.display = "none";
   settingsSection.style.display = "block";
+  startBtn.style.display = "";
 
   wordList.innerHTML = vocabulary
     .map((word) => `<span class="word-tag">${word}</span>`)
@@ -1179,6 +1183,18 @@ function handleVoiceChange() {
     selectedVoice = availableVoices[index];
     localStorage.setItem('selectedVoiceIndex', index);
   }
+}
+
+// Speak a random word from the list with the selected voice
+function testVoice() {
+  if (vocabulary.length === 0) return;
+  const word = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+  synth.cancel();
+  const utterance = new SpeechSynthesisUtterance(word);
+  utterance.lang = "en-US";
+  utterance.rate = 0.8;
+  if (selectedVoice) utterance.voice = selectedVoice;
+  synth.speak(utterance);
 }
 
 // Load selected deck
