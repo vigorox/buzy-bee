@@ -74,32 +74,25 @@
           </span>
         </h1>
 
-        <!-- Section 1: Load Deck -->
-        <div class="section-card">
-          <h2>📚 Select Deck</h2>
-          <div class="setting-item">
+        <!-- Section 1: Deck + Vocabulary List -->
+        <div class="section-card" id="wordListSection">
+          <h2>📚 Vocabulary</h2>
+          <div class="deck-picker">
             <select id="deckSelect">
               <option value="">Loading decks...</option>
             </select>
+            <button id="loadDeckBtn" class="primary-btn">Load</button>
           </div>
-          <div class="flex-row mv-10">
-            <button id="loadDeckBtn" class="primary-btn">Load Deck</button>
-          </div>
-        </div>
-
-        <!-- Section 2: Vocabulary List -->
-        <div class="section-card" id="wordListSection">
-          <div class="section-header">
-            <h2>📝 Vocabulary List (<span id="wordCount">0</span> words)</h2>
-          </div>
-          <div class="flex-row mv-10">
-            <button id="openImportBtn" class="secondary-btn">📥 Import</button>
+          <div class="current-deck">
+            <span class="current-deck-name" id="currentDeckName">Custom list</span>
+            <span class="current-deck-count"><span id="wordCount">0</span> words</span>
           </div>
           <div id="wordList" class="word-list"></div>
           <div id="emptyState">
             <p>📚 No vocabulary yet</p>
-            <p>Select a deck above or click "Import" to add words</p>
+            <p>Pick a deck above or click "Import" to add words</p>
           </div>
+          <button id="openImportBtn" class="secondary-btn btn-full-width btn-margin-top">📥 Import my own words</button>
         </div>
 
         <!-- Section 3: Unmemorized Words -->

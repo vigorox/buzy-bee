@@ -36,6 +36,7 @@ const wordListSection = document.getElementById("wordListSection");
 const settingsSection = document.getElementById("settingsSection");
 const wordList = document.getElementById("wordList");
 const wordCount = document.getElementById("wordCount");
+const currentDeckName = document.getElementById("currentDeckName");
 const emptyState = document.getElementById("emptyState");
 const unmemorizedSection = document.getElementById("unmemorizedSection");
 const unmemorizedList = document.getElementById("unmemorizedList");
@@ -155,6 +156,8 @@ async function parseVocabulary(content) {
 
 // Display vocabulary list
 function displayVocabulary() {
+  wordCount.textContent = vocabulary.length;
+  renderCurrentDeck();
   if (vocabulary.length === 0) {
     wordList.style.display = "none";
     emptyState.style.display = "block";
@@ -166,13 +169,32 @@ function displayVocabulary() {
   emptyState.style.display = "none";
   settingsSection.style.display = "block";
 
-  wordCount.textContent = vocabulary.length;
   wordList.innerHTML = vocabulary
     .map((word) => `<span class="word-tag">${word}</span>`)
     .join("");
   
   // Display unmemorized words
   displayUnmemorized();
+}
+
+// Last loaded deck name (null = custom / hand-edited list), persisted in localStorage
+function getCurrentDeck() {
+  return localStorage.getItem("currentDeck");
+}
+
+function setCurrentDeck(title) {
+  if (title) localStorage.setItem("currentDeck", title);
+  else localStorage.removeItem("currentDeck");
+  renderCurrentDeck();
+}
+
+function renderCurrentDeck() {
+  const title = getCurrentDeck();
+  currentDeckName.textContent = title || "Custom list";
+  currentDeckName.title = title || "";
+  currentDeckName.classList.toggle("custom", !title);
+  const index = title ? availableDecks.findIndex((d) => d.title === title) : -1;
+  if (index !== -1) deckSelect.value = String(index);
 }
 
 // Display unmemorized words
@@ -202,6 +224,7 @@ async function loadSampleData() {
 
   vocabulary = sampleVolabulary;
   saveToLocalStorage();
+  setCurrentDeck(null);
   displayVocabulary();
   closeImportModal();
   await Dialog.alert("Sample data loaded successfully!");
@@ -326,6 +349,7 @@ async function importFromUrl() {
 
   vocabulary = words;
   saveToLocalStorage();
+  setCurrentDeck(title);
   displayVocabulary();
   closeImportModal();
   await Dialog.alert(`Successfully imported "${title}" with ${words.length} word(s)!`);
@@ -510,6 +534,7 @@ async function checkSpellingAndImport(words) {
   } else {
     vocabulary = words;
     saveToLocalStorage();
+    setCurrentDeck(null);
     displayVocabulary();
   }
 }
@@ -524,6 +549,7 @@ async function checkSpellingAndAdd(words) {
   } else {
     vocabulary = [...vocabulary, ...words];
     saveToLocalStorage();
+    setCurrentDeck(null);
     displayVocabulary();
     manualInput.value = "";
     closeImportModal();
@@ -582,6 +608,7 @@ async function proceedWithSpelling() {
     }
 
     saveToLocalStorage();
+    setCurrentDeck(null);
     displayVocabulary();
     manualInput.value = "";
   }
@@ -1083,6 +1110,7 @@ function loadFromLocalStorage() {
 function loadSampleDataAuto() {
   vocabulary = sampleVolabulary;
   saveToLocalStorage();
+  localStorage.removeItem("currentDeck");
   displayVocabulary();
 }
 
@@ -1102,6 +1130,7 @@ function loadAvailableDecks() {
       ).join('');
     loadDeckBtn.disabled = false;
   }
+  renderCurrentDeck();
 }
 
 // Load available voices
@@ -1183,6 +1212,7 @@ async function loadSelectedDeck() {
   
   vocabulary = words;
   saveToLocalStorage();
+  setCurrentDeck(deck.title);
   displayVocabulary();
   await Dialog.alert(`Successfully loaded "${deck.title}" with ${words.length} word(s)!`);
 }

@@ -161,8 +161,7 @@ h3 {
   margin-bottom: 26px;
 }
 
-.section-card:nth-of-type(1) { background: var(--butter); }
-#wordListSection { background: var(--mint); }
+#wordListSection { background: var(--butter); }
 #unmemorizedSection { background: var(--rose); }
 #settingsSection { background: var(--lavender); }
 
@@ -245,7 +244,57 @@ select {
   align-items: center;
 }
 
-#deckSelect { flex: 1; }
+#deckSelect { flex: 1; min-width: 0; }
+
+/* ===== Deck picker + current deck ===== */
+.deck-picker {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.deck-picker .primary-btn {
+  flex: none;
+  width: auto;
+  padding: 10px 22px;
+}
+
+.current-deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 16px 0 10px;
+}
+
+.current-deck-name {
+  font-weight: 700;
+  color: var(--ink);
+  min-width: 0;
+  line-height: 1.3;
+}
+
+.current-deck-name::before {
+  content: "🐝 ";
+}
+
+.current-deck-name.custom {
+  color: var(--ink-soft);
+}
+
+.current-deck-name.custom::before {
+  content: "✏️ ";
+}
+
+.current-deck-count {
+  flex: none;
+  background: white;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  padding: 1px 12px;
+  font-size: 0.9em;
+  font-weight: 700;
+}
 
 /* ===== Settings ===== */
 .setting-item {
