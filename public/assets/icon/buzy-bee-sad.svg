@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <clipPath id="bodyClip">
+      <ellipse cx="100" cy="122" rx="64" ry="54"/>
+    </clipPath>
+  </defs>
+  <g stroke="#4b2a5c" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <!-- antennae (drooping) -->
+    <path d="M84 72 Q74 50 56 52" fill="none"/>
+    <path d="M116 72 Q126 50 144 52" fill="none"/>
+    <circle cx="50" cy="56" r="9" fill="#ff5c9a"/>
+    <circle cx="150" cy="56" r="9" fill="#ff5c9a"/>
+
+    <!-- wings (lowered) -->
+    <ellipse cx="44" cy="92" rx="28" ry="20" transform="rotate(-8 44 92)" fill="#e9e1ff"/>
+    <ellipse cx="156" cy="92" rx="28" ry="20" transform="rotate(8 156 92)" fill="#e9e1ff"/>
+
+    <!-- stinger -->
+    <path d="M92 172 L100 188 L108 172 Z" fill="#4b2a5c"/>
+
+    <!-- body (slightly squashed) -->
+    <ellipse cx="100" cy="122" rx="64" ry="54" fill="#ffd23f"/>
+  </g>
+
+  <g clip-path="url(#bodyClip)" fill="#4b2a5c">
+    <rect x="30" y="140" width="140" height="12"/>
+    <rect x="30" y="160" width="140" height="12"/>
+  </g>
+  <ellipse cx="100" cy="122" rx="64" ry="54" fill="none" stroke="#4b2a5c" stroke-width="6"/>
+
+  <!-- shines -->
+  <path d="M58 104 Q62 88 76 80" fill="none" stroke="#fff6cf" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- worried brows -->
+  <path d="M69 101 Q78 99 87 93" fill="none" stroke="#4b2a5c" stroke-width="5" stroke-linecap="round"/>
+  <path d="M131 101 Q122 99 113 93" fill="none" stroke="#4b2a5c" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- eyes looking down -->
+  <ellipse cx="80" cy="115" rx="7.5" ry="8.5" fill="#4b2a5c"/>
+  <ellipse cx="120" cy="115" rx="7.5" ry="8.5" fill="#4b2a5c"/>
+  <circle cx="82" cy="118" r="2.6" fill="#ffffff"/>
+  <circle cx="122" cy="118" r="2.6" fill="#ffffff"/>
+
+  <!-- tear -->
+  <path d="M129 122 Q125 129 125 133 Q125 138 129.5 138 Q134 138 134 133 Q134 129 129 122 Z" fill="#8fd3ff" stroke="#4b2a5c" stroke-width="3" stroke-linejoin="round"/>
+
+  <!-- faint cheeks -->
+  <ellipse cx="64" cy="128" rx="8" ry="5" fill="#ff8fb8" opacity="0.5"/>
+
+  <!-- frown -->
+  <path d="M91 133 Q100 125 109 133" fill="none" stroke="#4b2a5c" stroke-width="5" stroke-linecap="round"/>
+</svg>

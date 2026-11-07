@@ -65,14 +65,12 @@ const Dialog = {
       titleEl.style.marginTop = '0';
       titleEl.style.marginBottom = '15px';
       titleEl.style.fontSize = '1.3em';
-      titleEl.style.color = '#333';
       titleEl.textContent = title;
       content.appendChild(titleEl);
     }
 
     // 消息内容
     const messageEl = document.createElement('p');
-    messageEl.style.color = '#666';
     messageEl.style.lineHeight = '1.6';
     messageEl.style.marginBottom = '25px';
     messageEl.style.whiteSpace = 'pre-wrap';

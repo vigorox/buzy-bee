@@ -29,6 +29,8 @@ const openImportBtn = document.getElementById("openImportBtn");
 const closeImportBtn = document.getElementById("closeImportBtn");
 const importModal = document.getElementById("importModal");
 const deckSelect = document.getElementById("deckSelect");
+const urlInput = document.getElementById("urlInput");
+const importUrlBtn = document.getElementById("importUrlBtn");
 const loadDeckBtn = document.getElementById("loadDeckBtn");
 const wordListSection = document.getElementById("wordListSection");
 const settingsSection = document.getElementById("settingsSection");
@@ -95,6 +97,10 @@ loadVoices();
 fileInput.addEventListener("change", handleFileUpload);
 loadSampleBtn.addEventListener("click", loadSampleData);
 addWordsBtn.addEventListener("click", addManualWords);
+importUrlBtn.addEventListener("click", importFromUrl);
+urlInput.addEventListener("keypress", (e) => {
+  if (e.key === "Enter") importFromUrl();
+});
 openImportBtn.addEventListener("click", openImportModal);
 closeImportBtn.addEventListener("click", closeImportModal);
 loadDeckBtn.addEventListener("click", loadSelectedDeck);
@@ -179,7 +185,7 @@ function displayUnmemorized() {
   unmemorizedSection.style.display = "block";
   unmemorizedCount.textContent = unmemorizedWords.length;
   unmemorizedList.innerHTML = unmemorizedWords
-    .map((word) => `<span class="word-tag" style="background: #fee2e2; color: #dc2626;">${word}</span>`)
+    .map((word) => `<span class="word-tag miss">${word}</span>`)
     .join("");
 }
 
@@ -211,6 +217,118 @@ function closeImportModal() {
   importModal.classList.remove("show");
   manualInput.value = "";
   fileInput.value = "";
+  urlInput.value = "";
+}
+
+// Parse a deck's words (string "a, b" / newline-separated, or array)
+function parseDeckWords(words) {
+  const list = Array.isArray(words) ? words : String(words || "").split(/[\n,]+/);
+  return list.map((w) => String(w).trim()).filter((w) => w.length > 0);
+}
+
+// Custom (URL-imported) decks stored in localStorage
+function getCustomDecks() {
+  try {
+    return JSON.parse(localStorage.getItem("customDecks")) || [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function saveCustomDecks(decks) {
+  localStorage.setItem("customDecks", JSON.stringify(decks));
+}
+
+// Import a deck JSON from URL, save to localStorage and load it
+async function importFromUrl() {
+  const url = urlInput.value.trim();
+  if (!/^https?:\/\//i.test(url)) {
+    await Dialog.alert("Please enter a valid URL (http:// or https://)");
+    return;
+  }
+
+  importUrlBtn.disabled = true;
+  const originalText = importUrlBtn.textContent;
+  importUrlBtn.textContent = "Importing...";
+
+  let data;
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = JSON.parse(await res.text());
+  } catch (e) {
+    console.error("Import from URL failed", e);
+    await Dialog.alert(
+      `Failed to import from URL.\n\n${e.message}\n\n(The server must allow CORS and return valid JSON.)`
+    );
+    return;
+  } finally {
+    importUrlBtn.disabled = false;
+    importUrlBtn.textContent = originalText;
+  }
+
+  const fallbackTitle = url.split("/").pop();
+
+  // Array format: import multiple decks into the deck list
+  if (Array.isArray(data)) {
+    const imported = data
+      .map((d, i) => ({
+        title: (d && d.title && String(d.title).trim()) || `${fallbackTitle} #${i + 1}`,
+        words: parseDeckWords(d && d.words),
+      }))
+      .filter((d) => d.words.length > 0);
+
+    if (imported.length === 0) {
+      await Dialog.alert('No valid decks found. Each item must contain a "words" field.');
+      return;
+    }
+
+    if (!(await Dialog.confirm(
+      `Import ${imported.length} deck(s)?\n\n` +
+      imported.map((d) => `• ${d.title} (${d.words.length} words)`).join("\n") +
+      `\n\nThey will be added to the deck list.`
+    ))) {
+      return;
+    }
+
+    // Same URL replaces all decks previously imported from it
+    const decks = getCustomDecks().filter((d) => d.url !== url);
+    imported.forEach((d) => decks.push({ title: d.title, words: d.words.join(", "), url }));
+    saveCustomDecks(decks);
+    loadAvailableDecks();
+    deckSelect.value = String(availableDecks.findIndex((d) => d.url === url));
+    closeImportModal();
+    await Dialog.alert(
+      `Successfully imported ${imported.length} deck(s)!\n\nSelect one in "Select Deck" and click "Load Deck".`
+    );
+    return;
+  }
+
+  const words = parseDeckWords(data && data.words);
+  if (words.length === 0) {
+    await Dialog.alert('No words found. JSON must contain a "words" field.');
+    return;
+  }
+  const title = (data.title && String(data.title).trim()) || fallbackTitle;
+
+  if (!(await Dialog.confirm(
+    `Import "${title}" (${words.length} words)?\n\nThis will replace your current vocabulary list.`
+  ))) {
+    return;
+  }
+
+  // Save deck (same URL overwrites the previous import)
+  const decks = getCustomDecks().filter((d) => d.url !== url);
+  decks.push({ title, words: words.join(", "), url });
+  saveCustomDecks(decks);
+  loadAvailableDecks();
+  deckSelect.value = String(availableDecks.findIndex((d) => d.url === url));
+
+  vocabulary = words;
+  saveToLocalStorage();
+  displayVocabulary();
+  closeImportModal();
+  await Dialog.alert(`Successfully imported "${title}" with ${words.length} word(s)!`);
 }
 
 // Add words manually
@@ -654,8 +772,30 @@ function markAsDontKnow() {
   showFeedback(word, false, true);
 }
 
+// Game header bee: "normal" | "happy" | "sad"
+const BEE_IMAGES = {
+  normal: "assets/icon/buzy-bee.svg",
+  happy: "assets/icon/buzy-bee-happy.svg",
+  sad: "assets/icon/buzy-bee-sad.svg",
+};
+// Preload so the swap is instant
+Object.values(BEE_IMAGES).forEach((src) => (new Image().src = src));
+
+function setBeeMood(mood) {
+  const bee = document.getElementById("gameBee");
+  if (!bee) return;
+  bee.src = BEE_IMAGES[mood] || BEE_IMAGES.normal;
+  bee.classList.remove("bee-happy", "bee-sad");
+  if (mood === "happy" || mood === "sad") {
+    void bee.offsetWidth; // restart animation
+    bee.classList.add(`bee-${mood}`);
+  }
+}
+
 // Show feedback and optionally pronounce
 function showFeedback(message, isCorrect, pronounce, showWrongButton = false) {
+  setBeeMood(isCorrect ? "happy" : "sad");
+
   // Set message and style
   feedbackMessage.textContent = message;
   feedbackMessage.className =
@@ -718,6 +858,7 @@ function markFeedbackAsWrong() {
 
 // Move to next word
 function nextWord() {
+  setBeeMood("normal");
   currentWordIndex++;
 
   if (currentWordIndex >= vocabulary.length) {
@@ -948,15 +1089,16 @@ function loadSampleDataAuto() {
 // Load available decks from decks.js
 function loadAvailableDecks() {
   // Load decks from global AVAILABLE_DECKS variable defined in decks.js
-  availableDecks = AVAILABLE_DECKS || [];
-  
+  // plus decks imported from URL (stored in localStorage)
+  availableDecks = [...(AVAILABLE_DECKS || []), ...getCustomDecks()];
+
   if (availableDecks.length === 0) {
     deckSelect.innerHTML = '<option value="">No decks available</option>';
     loadDeckBtn.disabled = true;
   } else {
     deckSelect.innerHTML = '<option value="">-- Select a deck --</option>' +
       availableDecks.map((deck, index) => 
-        `<option value="${index}">${deck.title}</option>`
+        `<option value="${index}">${deck.url ? "🌐 " : ""}${deck.title}</option>`
       ).join('');
     loadDeckBtn.disabled = false;
   }
@@ -1032,10 +1174,7 @@ async function loadSelectedDeck() {
   }
   
   // Parse words from the deck
-  const words = deck.words
-    .split(',')
-    .map(word => word.trim())
-    .filter(word => word.length > 0);
+  const words = parseDeckWords(deck.words);
   
   if (words.length === 0) {
     await Dialog.alert('No words found in the deck!');

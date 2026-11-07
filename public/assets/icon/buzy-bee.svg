@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <clipPath id="bodyClip">
+      <ellipse cx="100" cy="118" rx="64" ry="56"/>
+    </clipPath>
+  </defs>
+  <g stroke="#4b2a5c" stroke-width="6" stroke-linejoin="round" stroke-linecap="round">
+    <!-- antennae -->
+    <path d="M84 68 Q78 44 64 32" fill="none"/>
+    <path d="M116 68 Q122 44 136 32" fill="none"/>
+    <circle cx="62" cy="30" r="9" fill="#ff5c9a"/>
+    <circle cx="138" cy="30" r="9" fill="#ff5c9a"/>
+
+    <!-- wings -->
+    <ellipse cx="50" cy="70" rx="30" ry="22" transform="rotate(-28 50 70)" fill="#e9e1ff"/>
+    <ellipse cx="150" cy="70" rx="30" ry="22" transform="rotate(28 150 70)" fill="#e9e1ff"/>
+
+    <!-- stinger -->
+    <path d="M92 170 L100 186 L108 170 Z" fill="#4b2a5c"/>
+
+    <!-- body -->
+    <ellipse cx="100" cy="118" rx="64" ry="56" fill="#ffd23f"/>
+  </g>
+
+  <!-- stripes (clipped to body) -->
+  <g clip-path="url(#bodyClip)" fill="#4b2a5c">
+    <rect x="30" y="136" width="140" height="12"/>
+    <rect x="30" y="156" width="140" height="12"/>
+  </g>
+  <!-- redraw body outline over stripes -->
+  <ellipse cx="100" cy="118" rx="64" ry="56" fill="none" stroke="#4b2a5c" stroke-width="6"/>
+
+  <!-- wing shine -->
+  <path d="M36 66 Q42 58 52 56" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+  <path d="M164 66 Q158 58 148 56" fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- body shine -->
+  <path d="M58 98 Q62 82 76 74" fill="none" stroke="#fff6cf" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- eyes -->
+  <ellipse cx="80" cy="108" rx="8" ry="10" fill="#4b2a5c"/>
+  <ellipse cx="120" cy="108" rx="8" ry="10" fill="#4b2a5c"/>
+  <circle cx="83" cy="104" r="3" fill="#ffffff"/>
+  <circle cx="123" cy="104" r="3" fill="#ffffff"/>
+
+  <!-- cheeks -->
+  <ellipse cx="66" cy="124" rx="9" ry="6" fill="#ff8fb8" opacity="0.85"/>
+  <ellipse cx="134" cy="124" rx="9" ry="6" fill="#ff8fb8" opacity="0.85"/>
+
+  <!-- smile -->
+  <path d="M92 122 Q100 131 108 122" fill="none" stroke="#4b2a5c" stroke-width="5" stroke-linecap="round"/>
+</svg>

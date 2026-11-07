@@ -14,6 +14,10 @@ const urlsToCache = [
   './version.js',
   './assets/icon/buzy-bee-icon-512.png',
   './assets/icon/buzy-bee-icon-256.png',
+  './assets/icon/buzy-bee-icon-192.png',
+  './assets/icon/buzy-bee.svg',
+  './assets/icon/buzy-bee-happy.svg',
+  './assets/icon/buzy-bee-sad.svg',
   './manifest.json'
 ];
 

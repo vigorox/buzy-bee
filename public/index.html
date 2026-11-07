@@ -7,7 +7,15 @@
       name="description"
       content="BuzyBee Spell - Practice English vocabulary with pronunciation and spelling"
     />
-    <meta name="theme-color" content="#FACB1C" />
+    <meta name="theme-color" content="#FFF7FA" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Mochiy+Pop+One&display=swap"
+    />
 
     <!-- iOS meta tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -56,14 +64,14 @@
       <!-- Main Page -->
       <div id="mainPage" class="page active">
         <h1 class="app-header">
-          <img
-            src="assets/icon/buzy-bee-icon-256.png"
-            alt="buzybee Icon"
-            style="
-              width: 90px;
-              height: 90px;
-            "
-          />BuzyBee Spell
+          <img src="assets/icon/buzy-bee.svg" alt="buzybee Icon" />
+          <span class="brand">
+            <span class="brand-name"
+              ><span class="brand-a">BuzyBee</span>
+              <span class="brand-b">Spell</span></span
+            >
+            <span class="brand-tagline">Listen, spell, and buzz along!</span>
+          </span>
         </h1>
 
         <!-- Section 1: Load Deck -->
@@ -189,7 +197,21 @@
             />
           </div>
 
-          <!-- Method 3: Sample Data -->
+          <!-- Method 3: Import from URL -->
+          <div class="import-method import-method-3">
+            <p>🌐 Import from URL</p>
+            <p>JSON format: { "title": "...", "words": "word1, word2, ..." } or an array of them</p>
+            <input
+              type="url"
+              id="urlInput"
+              placeholder="https://example.com/deck.json"
+            />
+            <button id="importUrlBtn" class="primary-btn btn-margin-top">
+              Import from URL
+            </button>
+          </div>
+
+          <!-- Method 4: Sample Data -->
           <div class="sample-data-container">
             <button id="loadSampleBtn" class="secondary-btn btn-full-width">
               Load Sample Data (3 words)
@@ -207,7 +229,8 @@
         <div class="game-header">
           <h1>
             <img
-              src="assets/icon/buzy-bee-icon-256.png"
+              id="gameBee"
+              src="assets/icon/buzy-bee.svg"
               alt="BuzyBee Spell"
               style="
                 width: 64px;

@@ -4,8 +4,8 @@
   "description": "Practice English vocabulary with pronunciation and spelling",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#FACB1C",
-  "theme_color": "#FACB1C",
+  "background_color": "#FFF7FA",
+  "theme_color": "#FFF7FA",
   "orientation": "portrait",
   "icons": [
     {
