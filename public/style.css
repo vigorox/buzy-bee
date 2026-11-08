@@ -314,7 +314,11 @@ select {
   flex: 2;
   width: auto;
   font-size: 1.15em;
+  background: var(--pink);
+  color: white;
 }
+
+.vocab-actions .primary-btn:hover { background: #f0478a; }
 
 .current-deck-count {
   flex: none;
