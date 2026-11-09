@@ -693,27 +693,29 @@ function pronounceWord(word) {
   pronunciationCount++;
   currentRepeatSpan.textContent = pronunciationCount;
 
-  // Cancel any ongoing speech
-  synth.cancel();
-
-  // Create speech utterance
-  currentSpeech = new SpeechSynthesisUtterance(word);
-  currentSpeech.lang = "en-US";
-  currentSpeech.rate = 0.8;
-  
-  // Use selected voice if available
-  if (selectedVoice) {
-    currentSpeech.voice = selectedVoice;
-  }
-
-  currentSpeech.onend = () => {
+  currentSpeech = speakWord(word, () => {
     // Wait a bit before next pronunciation
     setTimeout(() => {
       pronounceWord(word);
     }, gameSettings.pronounceInterval);
-  };
+  });
+}
 
-  synth.speak(currentSpeech);
+// Speak a word with the selected voice (cancels any ongoing speech).
+// Online voices (and the unknown default voice) clip the first moment of audio while
+// the stream starts up, so a short silent lead-in is prepended to absorb the loss.
+// Tweak LEAD_IN if the start of short words is still cut off.
+const LEAD_IN = "... ";
+function speakWord(word, onend) {
+  synth.cancel();
+  const needsLeadIn = !selectedVoice || !selectedVoice.localService;
+  const speech = new SpeechSynthesisUtterance(needsLeadIn ? LEAD_IN + word : word);
+  speech.lang = "en-US";
+  speech.rate = 0.8;
+  if (selectedVoice) speech.voice = selectedVoice;
+  if (onend) speech.onend = onend;
+  synth.speak(speech);
+  return speech;
 }
 
 // Skip pronunciation
@@ -725,22 +727,7 @@ function skipPronunciation() {
 
 // Repeat pronunciation (from answer phase)
 function repeatPronunciation() {
-  const word = vocabulary[currentWordIndex];
-  
-  // Cancel any ongoing speech
-  synth.cancel();
-  
-  // Create speech utterance
-  const speech = new SpeechSynthesisUtterance(word);
-  speech.lang = "en-US";
-  speech.rate = 0.8;
-  
-  // Use selected voice if available
-  if (selectedVoice) {
-    speech.voice = selectedVoice;
-  }
-  
-  synth.speak(speech);
+  speakWord(vocabulary[currentWordIndex]);
 }
 
 // Show answer phase
@@ -858,18 +845,7 @@ function showFeedback(message, isCorrect, pronounce, showWrongButton = false) {
 
   // Pronounce if needed
   if (pronounce) {
-    const word = vocabulary[currentWordIndex];
-    synth.cancel();
-    const speech = new SpeechSynthesisUtterance(word);
-    speech.lang = "en-US";
-    speech.rate = 0.8;
-    
-    // Use selected voice if available
-    if (selectedVoice) {
-      speech.voice = selectedVoice;
-    }
-    
-    synth.speak(speech);
+    speakWord(vocabulary[currentWordIndex]);
   }
 }
 
@@ -1168,7 +1144,7 @@ function loadVoices() {
   voiceSelect.innerHTML = '<option value="">Default voice</option>' +
     availableVoices.map((voice, index) => {
       const lang = voice.lang.replace('_', '-');
-      const label = `${voice.name} (${lang})`;
+      const label = `${voice.name} (${lang}) · ${voice.localService ? "Local" : "Online"}`;
       return `<option value="${index}">${label}</option>`;
     }).join('');
   
@@ -1200,13 +1176,7 @@ function handleVoiceChange() {
 // Speak a random word from the list with the selected voice
 function testVoice() {
   if (vocabulary.length === 0) return;
-  const word = vocabulary[Math.floor(Math.random() * vocabulary.length)];
-  synth.cancel();
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "en-US";
-  utterance.rate = 0.8;
-  if (selectedVoice) utterance.voice = selectedVoice;
-  synth.speak(utterance);
+  speakWord(vocabulary[Math.floor(Math.random() * vocabulary.length)]);
 }
 
 // Load selected deck
