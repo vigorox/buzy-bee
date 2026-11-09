@@ -220,6 +220,10 @@ select {
   padding-right: 40px;
 }
 
+#manualTitle {
+  margin-bottom: 8px;
+}
+
 #manualInput {
   resize: vertical;
   margin-bottom: 4px;
@@ -698,8 +702,6 @@ hr {
   margin-bottom: 10px;
   color: var(--ink-soft);
 }
-
-.sample-data-container { margin-bottom: 14px; }
 
 /* Spelling modal */
 .spelling-warning-heading {

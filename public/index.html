@@ -171,24 +171,30 @@
           <div class="import-method import-method-1">
             <p>✏️ Enter or Paste Words</p>
             <p>Recommended for iOS: Copy your word list and paste here</p>
+            <input
+              type="text"
+              id="manualTitle"
+              placeholder="Title (required), e.g. Unit 3 words"
+              maxlength="60"
+            />
             <textarea
               id="manualInput"
               placeholder="apple, banana, cat, dog..."
               rows="5"
             ></textarea>
             <button id="addWordsBtn" class="primary-btn btn-margin-top">
-              Add Words
+              Save Words
             </button>
           </div>
 
           <!-- Method 2: File Upload -->
           <div class="import-method import-method-2">
             <p>📁 Upload File</p>
-            <p>CSV or TXT file (words separated by comma or new line)</p>
+            <p>JSON file: { "title": "...", "words": "word1, word2, ..." } or an array of them. Both fields are required.</p>
             <input
               type="file"
               id="fileInput"
-              accept=".csv,.txt,text/plain,text/csv"
+              accept=".json,application/json"
             />
           </div>
 
@@ -203,13 +209,6 @@
             />
             <button id="importUrlBtn" class="primary-btn btn-margin-top">
               Import from URL
-            </button>
-          </div>
-
-          <!-- Method 4: Sample Data -->
-          <div class="sample-data-container">
-            <button id="loadSampleBtn" class="secondary-btn btn-full-width">
-              Load Sample Data (3 words)
             </button>
           </div>
 

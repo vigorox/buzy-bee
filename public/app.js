@@ -22,7 +22,7 @@ const gamePage = document.getElementById("gamePage");
 const resultPage = document.getElementById("resultPage");
 
 const fileInput = document.getElementById("fileInput");
-const loadSampleBtn = document.getElementById("loadSampleBtn");
+const manualTitle = document.getElementById("manualTitle");
 const manualInput = document.getElementById("manualInput");
 const addWordsBtn = document.getElementById("addWordsBtn");
 const openImportBtn = document.getElementById("openImportBtn");
@@ -88,6 +88,7 @@ let currentSpeech = null;
 let pronunciationCount = 0;
 let shouldSkip = false;
 let pendingWords = []; // Store words pending spelling confirmation
+let pendingTitle = ""; // Deck title for the pending words
 let availableDecks = []; // Store available decks from server
 
 // Initialize
@@ -97,7 +98,6 @@ loadVoices();
 
 // Event listeners
 fileInput.addEventListener("change", handleFileUpload);
-loadSampleBtn.addEventListener("click", loadSampleData);
 addWordsBtn.addEventListener("click", addManualWords);
 importUrlBtn.addEventListener("click", importFromUrl);
 urlInput.addEventListener("keypress", (e) => {
@@ -135,25 +135,64 @@ function handleFileUpload(e) {
   const reader = new FileReader();
   reader.onload = (event) => {
     const content = event.target.result;
-    parseVocabulary(content);
+    importJsonContent(content, file.name);
+    fileInput.value = ""; // allow re-selecting the same file
   };
   reader.readAsText(file);
 }
 
-// Parse vocabulary from file content
-async function parseVocabulary(content) {
-  // Split by newlines and commas
-  const words = content
-    .split(/[\n,]+/)
-    .map((word) => word.trim())
-    .filter((word) => word.length > 0);
+// Returns an error message if a deck object is invalid, else null.
+// A valid deck has a non-empty "title" string and a non-empty "words" (string or array).
+function validateDeck(d) {
+  if (!d || typeof d !== "object" || Array.isArray(d)) return "not an object";
+  if (typeof d.title !== "string" || !d.title.trim()) return 'missing "title"';
+  if (typeof d.words !== "string" && !Array.isArray(d.words)) return 'missing "words"';
+  if (parseDeckWords(d.words).length === 0) return '"words" is empty';
+  return null;
+}
 
-  if (words.length === 0) {
-    await Dialog.alert("No words found in the file!");
+// JSON file: a deck {title, words} or an array of such decks. Both fields are required.
+async function importJsonContent(content, fileName) {
+  let data;
+  try {
+    data = JSON.parse(content);
+  } catch (e) {
+    await Dialog.alert(`Invalid JSON file.\n\n${e.message}`);
     return;
   }
 
-  checkSpellingAndImport(words);
+  const formatHint =
+    'Expected:\n{ "title": "...", "words": "word1, word2, ..." }\nor an array of them.';
+
+  if (Array.isArray(data)) {
+    const errors = data
+      .map((d, i) => [i + 1, validateDeck(d)])
+      .filter(([, err]) => err)
+      .map(([n, err]) => `• Item ${n}: ${err}`);
+    if (data.length === 0 || errors.length > 0) {
+      await Dialog.alert(
+        `Invalid deck format.\n\n${data.length === 0 ? "The array is empty." : errors.slice(0, 5).join("\n")}\n\n${formatHint}`
+      );
+      return;
+    }
+    await importDeckList(data, `file:${fileName}`, fileName);
+    return;
+  }
+
+  const error = validateDeck(data);
+  if (error) {
+    await Dialog.alert(`Invalid deck format: ${error}.\n\n${formatHint}`);
+    return;
+  }
+
+  const words = parseDeckWords(data.words);
+  const title = data.title.trim();
+  vocabulary = words;
+  saveToLocalStorage();
+  setCurrentDeck(title);
+  displayVocabulary();
+  closeImportModal();
+  await Dialog.alert(`Loaded "${title}" with ${words.length} word(s)!`);
 }
 
 // Display vocabulary list
@@ -215,25 +254,6 @@ function displayUnmemorized() {
     .join("");
 }
 
-// Load sample data
-async function loadSampleData() {
-  // Show confirmation dialog
-  if (
-    !(await Dialog.confirm(
-      "This will replace your current vocabulary list with sample data. Continue?"
-    ))
-  ) {
-    return;
-  }
-
-  vocabulary = sampleVolabulary;
-  saveToLocalStorage();
-  setCurrentDeck(null);
-  displayVocabulary();
-  closeImportModal();
-  await Dialog.alert("Sample data loaded successfully!");
-}
-
 // Open import modal
 function openImportModal() {
   importModal.classList.add("show");
@@ -242,6 +262,7 @@ function openImportModal() {
 // Close import modal
 function closeImportModal() {
   importModal.classList.remove("show");
+  manualTitle.value = "";
   manualInput.value = "";
   fileInput.value = "";
   urlInput.value = "";
@@ -264,6 +285,40 @@ function getCustomDecks() {
 
 function saveCustomDecks(decks) {
   localStorage.setItem("customDecks", JSON.stringify(decks));
+}
+
+// Import an array of {title, words} decks into the deck list.
+// `source` is the URL (or "file:name") — importing the same source again replaces its decks.
+async function importDeckList(data, source, fallbackTitle) {
+  const imported = data
+    .map((d, i) => ({
+      title: (d && d.title && String(d.title).trim()) || `${fallbackTitle} #${i + 1}`,
+      words: parseDeckWords(d && d.words),
+    }))
+    .filter((d) => d.words.length > 0);
+
+  if (imported.length === 0) {
+    await Dialog.alert('No valid decks found. Each item must contain a "words" field.');
+    return;
+  }
+
+  if (!(await Dialog.confirm(
+    `Import ${imported.length} deck(s)?\n\n` +
+    imported.map((d) => `• ${d.title} (${d.words.length} words)`).join("\n") +
+    `\n\nThey will be added to the deck list.`
+  ))) {
+    return;
+  }
+
+  const decks = getCustomDecks().filter((d) => d.url !== source);
+  imported.forEach((d) => decks.push({ title: d.title, words: d.words.join(", "), url: source }));
+  saveCustomDecks(decks);
+  loadAvailableDecks();
+  deckSelect.value = String(availableDecks.findIndex((d) => d.url === source));
+  closeImportModal();
+  await Dialog.alert(
+    `Imported ${imported.length} deck(s)!\n\nPick one in the deck list and click "Load".`
+  );
 }
 
 // Import a deck JSON from URL, save to localStorage and load it
@@ -298,36 +353,7 @@ async function importFromUrl() {
 
   // Array format: import multiple decks into the deck list
   if (Array.isArray(data)) {
-    const imported = data
-      .map((d, i) => ({
-        title: (d && d.title && String(d.title).trim()) || `${fallbackTitle} #${i + 1}`,
-        words: parseDeckWords(d && d.words),
-      }))
-      .filter((d) => d.words.length > 0);
-
-    if (imported.length === 0) {
-      await Dialog.alert('No valid decks found. Each item must contain a "words" field.');
-      return;
-    }
-
-    if (!(await Dialog.confirm(
-      `Import ${imported.length} deck(s)?\n\n` +
-      imported.map((d) => `• ${d.title} (${d.words.length} words)`).join("\n") +
-      `\n\nThey will be added to the deck list.`
-    ))) {
-      return;
-    }
-
-    // Same URL replaces all decks previously imported from it
-    const decks = getCustomDecks().filter((d) => d.url !== url);
-    imported.forEach((d) => decks.push({ title: d.title, words: d.words.join(", "), url }));
-    saveCustomDecks(decks);
-    loadAvailableDecks();
-    deckSelect.value = String(availableDecks.findIndex((d) => d.url === url));
-    closeImportModal();
-    await Dialog.alert(
-      `Successfully imported ${imported.length} deck(s)!\n\nSelect one in "Select Deck" and click "Load Deck".`
-    );
+    await importDeckList(data, url, fallbackTitle);
     return;
   }
 
@@ -359,9 +385,16 @@ async function importFromUrl() {
   await Dialog.alert(`Successfully imported "${title}" with ${words.length} word(s)!`);
 }
 
-// Add words manually
+// Add a deck from manually entered words (title required)
 async function addManualWords() {
+  const title = manualTitle.value.trim();
   const input = manualInput.value.trim();
+
+  if (!title) {
+    await Dialog.alert("Please enter a title for this word list!");
+    manualTitle.focus();
+    return;
+  }
 
   if (!input) {
     await Dialog.alert("Please enter some words!");
@@ -391,19 +424,35 @@ async function addManualWords() {
     return;
   }
 
-  // Add to vocabulary (avoid duplicates)
-  const existingWords = new Set(vocabulary.map((w) => w.toLowerCase()));
-  const wordsToAdd = newWords.filter(
-    (word) => !existingWords.has(word.toLowerCase())
-  );
+  // Drop duplicates within the entered list
+  const seen = new Set();
+  const words = newWords.filter((word) => {
+    const key = word.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 
-  if (wordsToAdd.length === 0) {
-    await Dialog.alert("All words are already in the vocabulary list!");
-    return;
-  }
+  // Check spelling before saving
+  checkSpellingAndSaveManual(title, words);
+}
 
-  // Check spelling before adding
-  checkSpellingAndAdd(wordsToAdd);
+// Save manually entered words as a deck (same title replaces the previous one) and load it
+async function saveManualDeck(title, words) {
+  const source = `manual:${title}`;
+  const decks = getCustomDecks().filter((d) => d.url !== source);
+  decks.push({ title, words: words.join(", "), url: source });
+  saveCustomDecks(decks);
+  loadAvailableDecks();
+
+  vocabulary = words;
+  saveToLocalStorage();
+  setCurrentDeck(title);
+  displayVocabulary();
+  manualTitle.value = "";
+  manualInput.value = "";
+  closeImportModal();
+  await Dialog.alert(`Saved "${title}" with ${words.length} word(s)!`);
 }
 
 // Spelling check using LanguageTool API
@@ -528,36 +577,16 @@ function fallbackSpellCheck(words) {
   return suspicious;
 }
 
-// Check spelling and import words (for file upload)
-async function checkSpellingAndImport(words) {
+// Check spelling, then save the words as a deck (for manual input)
+async function checkSpellingAndSaveManual(title, words) {
   const suspicious = await checkSpelling(words);
 
   if (suspicious.length > 0) {
+    pendingTitle = title;
     pendingWords = words;
     showSpellingWarning(suspicious);
   } else {
-    vocabulary = words;
-    saveToLocalStorage();
-    setCurrentDeck(null);
-    displayVocabulary();
-  }
-}
-
-// Check spelling and add words (for manual input)
-async function checkSpellingAndAdd(words) {
-  const suspicious = await checkSpelling(words);
-
-  if (suspicious.length > 0) {
-    pendingWords = words;
-    showSpellingWarning(suspicious);
-  } else {
-    vocabulary = [...vocabulary, ...words];
-    saveToLocalStorage();
-    setCurrentDeck(null);
-    displayVocabulary();
-    manualInput.value = "";
-    closeImportModal();
-    await Dialog.alert(`Successfully added ${words.length} word(s)!`);
+    await saveManualDeck(title, words);
   }
 }
 
@@ -593,31 +622,14 @@ function cancelSpelling() {
 async function proceedWithSpelling() {
   spellingModal.classList.remove("show");
 
-  if (pendingWords.length > 0) {
-    // Check if this is adding to existing vocabulary or replacing
-    const existingWords = new Set(vocabulary.map((w) => w.toLowerCase()));
-    const wordsToAdd = pendingWords.filter(
-      (word) => !existingWords.has(word.toLowerCase())
-    );
-
-    if (vocabulary.length > 0 && wordsToAdd.length < pendingWords.length) {
-      // Adding to existing vocabulary
-      vocabulary = [...vocabulary, ...wordsToAdd];
-      closeImportModal();
-      await Dialog.alert(`Successfully added ${wordsToAdd.length} word(s)!`);
-    } else {
-      // Replacing vocabulary (file upload)
-      vocabulary = pendingWords;
-      closeImportModal();
-    }
-
-    saveToLocalStorage();
-    setCurrentDeck(null);
-    displayVocabulary();
-    manualInput.value = "";
-  }
-
+  const title = pendingTitle;
+  const words = pendingWords;
+  pendingTitle = "";
   pendingWords = [];
+
+  if (title && words.length > 0) {
+    await saveManualDeck(title, words);
+  }
 }
 
 // Start game
@@ -1130,7 +1142,7 @@ function loadAvailableDecks() {
   } else {
     deckSelect.innerHTML = '<option value="">-- Select a deck --</option>' +
       availableDecks.map((deck, index) => 
-        `<option value="${index}">${deck.url ? "🌐 " : ""}${deck.title}</option>`
+        `<option value="${index}">${deck.url ? (deck.url.startsWith("file:") ? "📄 " : deck.url.startsWith("manual:") ? "✏️ " : "🌐 ") : ""}${deck.title}</option>`
       ).join('');
     loadDeckBtn.disabled = false;
   }
