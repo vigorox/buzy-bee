@@ -151,6 +151,39 @@ h3 {
   margin-top: 4px;
 }
 
+.app-version {
+  font-size: 0.7em;
+  font-weight: 500;
+  opacity: 0.4;
+  margin-left: 2px;
+}
+
+/* ===== Toast ===== */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translate(-50%, 20px);
+  z-index: 3000;
+  max-width: 86vw;
+  background: white;
+  color: var(--ink);
+  border: var(--line);
+  border-radius: 999px;
+  box-shadow: var(--shadow-sm);
+  padding: 10px 22px;
+  font-weight: 700;
+  font-size: 1.1em;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
 /* ===== Section cards ===== */
 .section-card {
   background: white;

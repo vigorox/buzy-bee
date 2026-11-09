@@ -92,6 +92,8 @@ let pendingTitle = ""; // Deck title for the pending words
 let availableDecks = []; // Store available decks from server
 
 // Initialize
+const appVersionEl = document.getElementById("appVersion");
+if (appVersionEl && typeof APP_VERSION !== "undefined") appVersionEl.textContent = `v${APP_VERSION}`;
 loadFromLocalStorage();
 loadAvailableDecks();
 loadVoices();
@@ -1173,10 +1175,36 @@ function handleVoiceChange() {
   }
 }
 
-// Speak a random word from the list with the selected voice
+// Small toast message at the bottom of the screen
+let toastTimer = null;
+function showToast(message, duration = 2200) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    toast.setAttribute("role", "status");
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  void toast.offsetWidth; // restart the transition when shown repeatedly
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), duration);
+}
+
+// Speak a random word from the list with the selected voice, then show which word it was
 function testVoice() {
   if (vocabulary.length === 0) return;
-  speakWord(vocabulary[Math.floor(Math.random() * vocabulary.length)]);
+  const word = vocabulary[Math.floor(Math.random() * vocabulary.length)];
+  let shown = false;
+  const reveal = () => {
+    if (shown) return;
+    shown = true;
+    showToast(`🔊 ${word}`);
+  };
+  const speech = speakWord(word, reveal);
+  speech.onerror = reveal;
 }
 
 // Load selected deck
