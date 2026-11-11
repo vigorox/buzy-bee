@@ -727,9 +727,18 @@ function pronounceWord(word) {
 // Known: some voices (e.g. Windows Google/local ones) clip the first moment of a short word.
 // Tried without success: a silent warm-up utterance, keeping a silent utterance running,
 // leading punctuation / zero-width characters, and changing when cancel() is called.
-// A spoken filler ("uh, ") in front of the word does work, but is audible with Natural
-// voices; iOS, Android and Microsoft Natural voices don't need anything. So the word is
-// spoken as is. Pre-recorded audio would be the only complete fix (tools/gen-audio.py).
+// A spoken filler in front of the word does work: "uh, " is practically inaudible with
+// Windows local voices but clearly audible with Natural voices. iOS, Android and Microsoft
+// Natural voices don't need anything, so only Windows local voices get a lead-in and every
+// other word is spoken as is.
+// Pre-recorded audio would be the only complete fix (tools/gen-audio.py).
+const IS_WINDOWS = /Windows/i.test(navigator.userAgent);
+const LEAD_IN_WINDOWS_LOCAL = "uh, ";
+
+function getLeadIn(voice) {
+  return IS_WINDOWS && voice && voice.localService ? LEAD_IN_WINDOWS_LOCAL : "";
+}
+
 function speakWord(word, onend) {
   synth.cancel();
 
@@ -741,7 +750,7 @@ function speakWord(word, onend) {
     return u;
   };
 
-  const speech = build(word);
+  const speech = build(getLeadIn(selectedVoice) + word);
   if (onend) speech.onend = onend;
   synth.speak(speech);
   return speech;
