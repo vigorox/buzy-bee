@@ -723,19 +723,41 @@ function pronounceWord(word) {
 }
 
 // Speak a word with the selected voice (cancels any ongoing speech).
-// Online voices (and the unknown default voice) clip the first moment of audio while
-// the stream starts up, so a short silent lead-in is prepended to absorb the loss.
-// Tweak LEAD_IN if the start of short words is still cut off.
-const LEAD_IN = "... ";
+// The first moment of audio gets clipped (online voices while the stream starts, local ones
+// while the audio device wakes), so a short filler is spoken first to absorb the loss.
+// Punctuation alone is skipped by the engine and doesn't help. Local voices say "uh, "
+// almost inaudibly, but Natural (online) voices pronounce it clearly, so the lead-in is
+// picked per voice type. (A separate silent warm-up utterance was too slow.)
+//
+// Lead-in per voice type: the first matching rule wins, DEFAULT_LEAD_IN is the fallback
+// (also used for "Default voice" and e.g. iOS voices). Fill in what works for each type.
+const DEFAULT_LEAD_IN = "uh, ";
+const LEAD_IN_RULES = [
+  { type: "Microsoft Natural", test: (v) => /natural/i.test(v.name), leadIn: "..., " },
+  { type: "Google online", test: (v) => /google/i.test(v.name) && !v.localService, leadIn: "hmm, " },
+  { type: "Local", test: (v) => v.localService, leadIn: "uh, " },
+];
+
+function getLeadIn(voice) {
+  const override = localStorage.getItem("leadIn");
+  if (override !== null) return override;
+  const rule = voice && LEAD_IN_RULES.find((r) => r.test(voice));
+  return rule ? rule.leadIn : DEFAULT_LEAD_IN;
+}
+
 function speakWord(word, onend) {
   synth.cancel();
-  const needsLeadIn = !selectedVoice || !selectedVoice.localService;
-  const speech = new SpeechSynthesisUtterance(
-    needsLeadIn ? LEAD_IN + word : word,
-  );
-  speech.lang = "en-US";
-  speech.rate = 0.8;
-  if (selectedVoice) speech.voice = selectedVoice;
+
+  const build = (text) => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = "en-US";
+    u.rate = 0.7;
+    if (selectedVoice) u.voice = selectedVoice;
+    return u;
+  };
+
+
+  const speech = build(getLeadIn(selectedVoice) + word);
   if (onend) speech.onend = onend;
   synth.speak(speech);
   return speech;
