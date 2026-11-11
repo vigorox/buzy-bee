@@ -1225,11 +1225,11 @@ function loadVoices() {
 
 // Voice hints under the Voice menu:
 // - no English voice at all: explain how to install one (Android-specific steps on Android)
-// - Windows without any Natural voice: suggest Edge (plus a dialog once per browser session)
+// - Windows without any Natural voice: suggest Edge (small note under the menu)
 // Voices arrive asynchronously, so wait until the list has settled before checking.
 function scheduleVoiceHints() {
   clearTimeout(voiceHintTimer);
-  voiceHintTimer = setTimeout(async () => {
+  voiceHintTimer = setTimeout(() => {
     const ua = navigator.userAgent;
     const isAndroid = /Android/i.test(ua);
     const isWindows = /Windows/i.test(ua);
@@ -1245,13 +1245,31 @@ function scheduleVoiceHints() {
 
     const suggestEdge = !noVoices && isWindows && !isEdge && !hasNatural;
     document.getElementById("voiceHint").hidden = !suggestEdge;
-    if (!suggestEdge || sessionStorage.getItem("naturalHintShown")) return;
-    sessionStorage.setItem("naturalHintShown", "1");
-    await Dialog.alert(
+  }, 2000);
+}
+
+// Google Chrome on Windows (not Edge/Brave/Opera, which are Chromium too)
+function isWindowsChrome() {
+  const uad = navigator.userAgentData;
+  if (uad) {
+    return (
+      uad.platform === "Windows" &&
+      uad.brands.some((b) => b.brand === "Google Chrome")
+    );
+  }
+  const ua = navigator.userAgent;
+  return /Windows/i.test(ua) && /Chrome\//.test(ua) && !/Edg\/|OPR\/|Brave/.test(ua);
+}
+
+// Every time the app is opened in Chrome on Windows, suggest Edge once.
+// (Chrome has no Natural voices, Edge does.)
+if (isWindowsChrome()) {
+  setTimeout(() => {
+    Dialog.alert(
       "For better voice quality on Windows, open this app in Microsoft Edge (Natural voices).\n\n" +
         "建議使用 Edge 瀏覽器開啟，可使用更自然的 Natural 語音。",
     );
-  }, 2000);
+  }, 600);
 }
 
 // Voices might load asynchronously on some browsers
