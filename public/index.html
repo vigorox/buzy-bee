@@ -360,7 +360,9 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("sw.js")
+            // updateViaCache: "none" → sw.js and its imported version.js never come from
+            // the HTTP cache (GitHub Pages sends max-age=600), so updates are seen at once
+            .register("sw.js", { updateViaCache: "none" })
             .then((registration) => {
               console.log("ServiceWorker registered:", registration);
 

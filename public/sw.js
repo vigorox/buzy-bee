@@ -38,24 +38,32 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('Opened cache:', CACHE_NAME);
-        return cache.addAll(urlsToCache);
+        // cache: 'reload' skips the HTTP cache (GitHub Pages sends max-age=600), so the new
+        // cache never ends up holding stale copies of the files
+        return cache.addAll(urlsToCache.map((url) => new Request(url, { cache: 'reload' })));
       })
   );
 });
 
 // Fetch event - Network first, then cache (better for Safari updates)
 self.addEventListener('fetch', (event) => {
+  // Only handle GET requests; let everything else go straight to the network
+  if (event.request.method !== 'GET') return;
+
   event.respondWith(
-    fetch(event.request)
+    // cache: 'no-cache' → always revalidate with the server instead of trusting the
+    // HTTP cache, so "network first" really is network first
+    fetch(event.request, { cache: 'no-cache' })
       .then((response) => {
-        // Clone the response before caching
-        const responseToCache = response.clone();
-        
-        caches.open(CACHE_NAME)
-          .then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        
+        // Only keep good responses
+        if (response.ok) {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            });
+        }
+
         return response;
       })
       .catch(() => {
