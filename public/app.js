@@ -1163,10 +1163,12 @@ function loadVoices() {
   // Get all voices
   const voices = synth.getVoices();
 
-  // Filter English voices
-  availableVoices = voices.filter(
-    (voice) => voice.lang.startsWith("en-") || voice.lang.startsWith("en_"),
-  );
+  // Keep US and UK English voices only (en-US / en-GB). If the device has neither
+  // (e.g. only en-AU or en-IN), fall back to every English voice rather than none.
+  const normLang = (voice) => voice.lang.replace("_", "-");
+  const english = voices.filter((voice) => /^en-/i.test(normLang(voice)));
+  const usUk = english.filter((voice) => /^en-(US|GB)$/i.test(normLang(voice)));
+  availableVoices = usUk.length > 0 ? usUk : english;
 
   if (availableVoices.length === 0) {
     voiceSelect.innerHTML =
@@ -1186,12 +1188,16 @@ function loadVoices() {
       })
       .join("");
 
-  // Load saved voice preference ("" = user explicitly chose the default voice)
-  const savedVoiceIndex = localStorage.getItem("selectedVoiceIndex");
-  if (savedVoiceIndex && availableVoices[savedVoiceIndex]) {
-    voiceSelect.value = savedVoiceIndex;
-    selectedVoice = availableVoices[savedVoiceIndex];
-  } else if (savedVoiceIndex === null) {
+  // Saved preference is stored by voice name, so changes to the list don't shift it
+  // ("" = user explicitly chose the default voice, null = never chose)
+  const savedVoiceName = localStorage.getItem("selectedVoiceName");
+  const savedIndex = savedVoiceName
+    ? availableVoices.findIndex((v) => v.name === savedVoiceName)
+    : -1;
+  if (savedIndex !== -1) {
+    voiceSelect.value = String(savedIndex);
+    selectedVoice = availableVoices[savedIndex];
+  } else if (savedVoiceName === null) {
     // No choice made yet: prefer a Natural en-US voice, then any Natural English voice
     const natural = availableVoices.filter((v) => /natural/i.test(v.name));
     const best =
@@ -1246,11 +1252,12 @@ function handleVoiceChange() {
   const index = voiceSelect.value;
   if (index === "") {
     selectedVoice = null;
-    localStorage.setItem("selectedVoiceIndex", ""); // explicit "default voice" choice
+    localStorage.setItem("selectedVoiceName", ""); // explicit "default voice" choice
   } else {
     selectedVoice = availableVoices[index];
-    localStorage.setItem("selectedVoiceIndex", index);
+    localStorage.setItem("selectedVoiceName", selectedVoice.name);
   }
+  localStorage.removeItem("selectedVoiceIndex"); // legacy key (index into an older list)
 }
 
 // Small toast message at the bottom of the screen
