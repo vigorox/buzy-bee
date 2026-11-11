@@ -723,37 +723,13 @@ function pronounceWord(word) {
 }
 
 // Speak a word with the selected voice (cancels any ongoing speech).
-// The first moment of audio gets clipped (online voices while the stream starts, local ones
-// while the audio device wakes), so a short filler is spoken first to absorb the loss.
-// Punctuation alone is skipped by the engine and doesn't help. Local voices say "uh, "
-// almost inaudibly, but Natural (online) voices pronounce it clearly, so the lead-in is
-// picked per voice type. (A separate silent warm-up utterance was too slow.)
 //
-// Lead-in per voice type: the first matching rule wins, DEFAULT_LEAD_IN is the fallback
-// (also used for "Default voice"). Fill in what works for each type.
-// iOS (iPhone/iPad, including iPadOS that reports itself as a Mac) and Android's local
-// voices need no lead-in at all: tested, they don't clip the start. (Android online voices
-// are untested and fall through to the rules below.)
-const IS_IOS =
-  /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-  (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
-const IS_ANDROID = /Android/i.test(navigator.userAgent);
-const DEFAULT_LEAD_IN = IS_IOS || IS_ANDROID ? "" : "uh, ";
-const LEAD_IN_RULES = [
-  { type: "iOS", test: () => IS_IOS, leadIn: "" },
-  { type: "Android local", test: (v) => IS_ANDROID && v.localService, leadIn: "" },
-  { type: "Microsoft Natural", test: (v) => /natural/i.test(v.name), leadIn: "......, " },
-  { type: "Google online", test: (v) => /google/i.test(v.name) && !v.localService, leadIn: "......, " },
-  { type: "Local", test: (v) => v.localService, leadIn: "uh, " },
-];
-
-function getLeadIn(voice) {
-  const override = localStorage.getItem("leadIn");
-  if (override !== null) return override;
-  const rule = voice && LEAD_IN_RULES.find((r) => r.test(voice));
-  return rule ? rule.leadIn : DEFAULT_LEAD_IN;
-}
-
+// Known: some voices (e.g. Windows Google/local ones) clip the first moment of a short word.
+// Tried without success: a silent warm-up utterance, keeping a silent utterance running,
+// leading punctuation / zero-width characters, and changing when cancel() is called.
+// A spoken filler ("uh, ") in front of the word does work, but is audible with Natural
+// voices; iOS, Android and Microsoft Natural voices don't need anything. So the word is
+// spoken as is. Pre-recorded audio would be the only complete fix (tools/gen-audio.py).
 function speakWord(word, onend) {
   synth.cancel();
 
@@ -765,8 +741,7 @@ function speakWord(word, onend) {
     return u;
   };
 
-
-  const speech = build(getLeadIn(selectedVoice) + word);
+  const speech = build(word);
   if (onend) speech.onend = onend;
   synth.speak(speech);
   return speech;
