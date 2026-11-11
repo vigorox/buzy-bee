@@ -1262,11 +1262,13 @@ function isWindowsChrome() {
   return /Windows/i.test(ua) && /Chrome\//.test(ua) && !/Edg\/|OPR\/|Brave/.test(ua);
 }
 
-// Every time the app is opened in Chrome on Windows, suggest Edge once.
+// In Chrome on Windows, suggest Edge once per browser session: sessionStorage lives as long
+// as the tab/window, so reloading doesn't repeat it but opening the app again does.
 // (Chrome has no Natural voices, Edge does.)
-if (isWindowsChrome()) {
-  setTimeout(() => {
-    Dialog.alert(
+if (isWindowsChrome() && !sessionStorage.getItem("edgeHintShown")) {
+  setTimeout(async () => {
+    sessionStorage.setItem("edgeHintShown", "1");
+    await Dialog.alert(
       "For better voice quality on Windows, open this app in Microsoft Edge (Natural voices).\n\n" +
         "建議使用 Edge 瀏覽器開啟，可使用更自然的 Natural 語音。",
     );
