@@ -742,8 +742,8 @@ const DEFAULT_LEAD_IN = IS_IOS || IS_ANDROID ? "" : "uh, ";
 const LEAD_IN_RULES = [
   { type: "iOS", test: () => IS_IOS, leadIn: "" },
   { type: "Android local", test: (v) => IS_ANDROID && v.localService, leadIn: "" },
-  { type: "Microsoft Natural", test: (v) => /natural/i.test(v.name), leadIn: "..., " },
-  { type: "Google online", test: (v) => /google/i.test(v.name) && !v.localService, leadIn: "hmm, " },
+  { type: "Microsoft Natural", test: (v) => /natural/i.test(v.name), leadIn: "......, " },
+  { type: "Google online", test: (v) => /google/i.test(v.name) && !v.localService, leadIn: "......, " },
   { type: "Local", test: (v) => v.localService, leadIn: "uh, " },
 ];
 
@@ -1199,7 +1199,13 @@ function loadVoices() {
   const normLang = (voice) => voice.lang.replace("_", "-");
   const english = voices.filter((voice) => /^en-/i.test(normLang(voice)));
   const usUk = english.filter((voice) => /^en-(US|GB)$/i.test(normLang(voice)));
-  availableVoices = usUk.length > 0 ? usUk : english;
+  const candidates = usUk.length > 0 ? usUk : english;
+
+  // Hide Google's online voices (Chrome): they clip the start of words and the lead-in
+  // that fixes it is clearly audible. Keep them only if nothing else is available.
+  const isGoogleOnline = (voice) => /google/i.test(voice.name) && !voice.localService;
+  const withoutGoogle = candidates.filter((voice) => !isGoogleOnline(voice));
+  availableVoices = withoutGoogle.length > 0 ? withoutGoogle : candidates;
 
   if (availableVoices.length === 0) {
     voiceSelect.innerHTML =
