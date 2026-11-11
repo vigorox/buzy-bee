@@ -730,9 +730,18 @@ function pronounceWord(word) {
 // picked per voice type. (A separate silent warm-up utterance was too slow.)
 //
 // Lead-in per voice type: the first matching rule wins, DEFAULT_LEAD_IN is the fallback
-// (also used for "Default voice" and e.g. iOS voices). Fill in what works for each type.
-const DEFAULT_LEAD_IN = "uh, ";
+// (also used for "Default voice"). Fill in what works for each type.
+// iOS (iPhone/iPad, including iPadOS that reports itself as a Mac) and Android's local
+// voices need no lead-in at all: tested, they don't clip the start. (Android online voices
+// are untested and fall through to the rules below.)
+const IS_IOS =
+  /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+  (/Macintosh/i.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/i.test(navigator.userAgent);
+const DEFAULT_LEAD_IN = IS_IOS || IS_ANDROID ? "" : "uh, ";
 const LEAD_IN_RULES = [
+  { type: "iOS", test: () => IS_IOS, leadIn: "" },
+  { type: "Android local", test: (v) => IS_ANDROID && v.localService, leadIn: "" },
   { type: "Microsoft Natural", test: (v) => /natural/i.test(v.name), leadIn: "..., " },
   { type: "Google online", test: (v) => /google/i.test(v.name) && !v.localService, leadIn: "hmm, " },
   { type: "Local", test: (v) => v.localService, leadIn: "uh, " },
