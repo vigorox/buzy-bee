@@ -158,6 +158,20 @@ h3 {
   margin-left: 2px;
 }
 
+.section-card .voice-hint {
+  margin: 6px 2px 0;
+  font-size: 0.8em;
+  line-height: 1.35;
+  color: var(--ink-soft);
+}
+
+.section-card .voice-hint[hidden] { display: none; }
+
+.section-card #voiceMissing {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 /* ===== Toast ===== */
 .toast {
   position: fixed;

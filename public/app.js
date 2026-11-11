@@ -10,11 +10,7 @@ let gameSettings = {
   pronounceCount: 2,
 };
 
-const sampleVolabulary = [
-  "apple",
-  "banana",
-  "cat"
-];
+const sampleVolabulary = ["apple", "banana", "cat"];
 
 // DOM elements
 const mainPage = document.getElementById("mainPage");
@@ -41,7 +37,9 @@ const emptyState = document.getElementById("emptyState");
 const unmemorizedSection = document.getElementById("unmemorizedSection");
 const unmemorizedList = document.getElementById("unmemorizedList");
 const unmemorizedCount = document.getElementById("unmemorizedCount");
-const practiceUnmemorizedBtn = document.getElementById("practiceUnmemorizedBtn");
+const practiceUnmemorizedBtn = document.getElementById(
+  "practiceUnmemorizedBtn",
+);
 const clearUnmemorizedBtn = document.getElementById("clearUnmemorizedBtn");
 
 const randomizeCheckbox = document.getElementById("randomizeCheckbox");
@@ -59,7 +57,9 @@ const feedbackModal = document.getElementById("feedbackModal");
 const feedbackMessage = document.getElementById("feedbackMessage");
 const feedbackOkBtn = document.getElementById("feedbackOkBtn");
 const feedbackButtons = document.getElementById("feedbackButtons");
-const feedbackButtonsWithWrong = document.getElementById("feedbackButtonsWithWrong");
+const feedbackButtonsWithWrong = document.getElementById(
+  "feedbackButtonsWithWrong",
+);
 const feedbackOkBtn2 = document.getElementById("feedbackOkBtn2");
 const feedbackWrongBtn = document.getElementById("feedbackWrongBtn");
 const spellingModal = document.getElementById("spellingModal");
@@ -89,11 +89,13 @@ let pronunciationCount = 0;
 let shouldSkip = false;
 let pendingWords = []; // Store words pending spelling confirmation
 let pendingTitle = ""; // Deck title for the pending words
+let voiceHintTimer = null; // Debounce timer for the Voice menu hints (must exist before loadVoices() runs)
 let availableDecks = []; // Store available decks from server
 
 // Initialize
 const appVersionEl = document.getElementById("appVersion");
-if (appVersionEl && typeof APP_VERSION !== "undefined") appVersionEl.textContent = `v${APP_VERSION}`;
+if (appVersionEl && typeof APP_VERSION !== "undefined")
+  appVersionEl.textContent = `v${APP_VERSION}`;
 loadFromLocalStorage();
 loadAvailableDecks();
 loadVoices();
@@ -148,7 +150,8 @@ function handleFileUpload(e) {
 function validateDeck(d) {
   if (!d || typeof d !== "object" || Array.isArray(d)) return "not an object";
   if (typeof d.title !== "string" || !d.title.trim()) return 'missing "title"';
-  if (typeof d.words !== "string" && !Array.isArray(d.words)) return 'missing "words"';
+  if (typeof d.words !== "string" && !Array.isArray(d.words))
+    return 'missing "words"';
   if (parseDeckWords(d.words).length === 0) return '"words" is empty';
   return null;
 }
@@ -173,7 +176,7 @@ async function importJsonContent(content, fileName) {
       .map(([n, err]) => `• Item ${n}: ${err}`);
     if (data.length === 0 || errors.length > 0) {
       await Dialog.alert(
-        `Invalid deck format.\n\n${data.length === 0 ? "The array is empty." : errors.slice(0, 5).join("\n")}\n\n${formatHint}`
+        `Invalid deck format.\n\n${data.length === 0 ? "The array is empty." : errors.slice(0, 5).join("\n")}\n\n${formatHint}`,
       );
       return;
     }
@@ -217,7 +220,7 @@ function displayVocabulary() {
   wordList.innerHTML = vocabulary
     .map((word) => `<span class="word-tag">${word}</span>`)
     .join("");
-  
+
   // Display unmemorized words
   displayUnmemorized();
 }
@@ -272,7 +275,9 @@ function closeImportModal() {
 
 // Parse a deck's words (string "a, b" / newline-separated, or array)
 function parseDeckWords(words) {
-  const list = Array.isArray(words) ? words : String(words || "").split(/[\n,]+/);
+  const list = Array.isArray(words)
+    ? words
+    : String(words || "").split(/[\n,]+/);
   return list.map((w) => String(w).trim()).filter((w) => w.length > 0);
 }
 
@@ -294,32 +299,42 @@ function saveCustomDecks(decks) {
 async function importDeckList(data, source, fallbackTitle) {
   const imported = data
     .map((d, i) => ({
-      title: (d && d.title && String(d.title).trim()) || `${fallbackTitle} #${i + 1}`,
+      title:
+        (d && d.title && String(d.title).trim()) ||
+        `${fallbackTitle} #${i + 1}`,
       words: parseDeckWords(d && d.words),
     }))
     .filter((d) => d.words.length > 0);
 
   if (imported.length === 0) {
-    await Dialog.alert('No valid decks found. Each item must contain a "words" field.');
+    await Dialog.alert(
+      'No valid decks found. Each item must contain a "words" field.',
+    );
     return;
   }
 
-  if (!(await Dialog.confirm(
-    `Import ${imported.length} deck(s)?\n\n` +
-    imported.map((d) => `• ${d.title} (${d.words.length} words)`).join("\n") +
-    `\n\nThey will be added to the deck list.`
-  ))) {
+  if (
+    !(await Dialog.confirm(
+      `Import ${imported.length} deck(s)?\n\n` +
+        imported
+          .map((d) => `• ${d.title} (${d.words.length} words)`)
+          .join("\n") +
+        `\n\nThey will be added to the deck list.`,
+    ))
+  ) {
     return;
   }
 
   const decks = getCustomDecks().filter((d) => d.url !== source);
-  imported.forEach((d) => decks.push({ title: d.title, words: d.words.join(", "), url: source }));
+  imported.forEach((d) =>
+    decks.push({ title: d.title, words: d.words.join(", "), url: source }),
+  );
   saveCustomDecks(decks);
   loadAvailableDecks();
   deckSelect.value = String(availableDecks.findIndex((d) => d.url === source));
   closeImportModal();
   await Dialog.alert(
-    `Imported ${imported.length} deck(s)!\n\nPick one in the deck list and click "Load".`
+    `Imported ${imported.length} deck(s)!\n\nPick one in the deck list and click "Load".`,
   );
 }
 
@@ -343,7 +358,7 @@ async function importFromUrl() {
   } catch (e) {
     console.error("Import from URL failed", e);
     await Dialog.alert(
-      `Failed to import from URL.\n\n${e.message}\n\n(The server must allow CORS and return valid JSON.)`
+      `Failed to import from URL.\n\n${e.message}\n\n(The server must allow CORS and return valid JSON.)`,
     );
     return;
   } finally {
@@ -366,9 +381,11 @@ async function importFromUrl() {
   }
   const title = (data.title && String(data.title).trim()) || fallbackTitle;
 
-  if (!(await Dialog.confirm(
-    `Import "${title}" (${words.length} words)?\n\nThis will replace your current vocabulary list.`
-  ))) {
+  if (
+    !(await Dialog.confirm(
+      `Import "${title}" (${words.length} words)?\n\nThis will replace your current vocabulary list.`,
+    ))
+  ) {
     return;
   }
 
@@ -384,7 +401,9 @@ async function importFromUrl() {
   setCurrentDeck(title);
   displayVocabulary();
   closeImportModal();
-  await Dialog.alert(`Successfully imported "${title}" with ${words.length} word(s)!`);
+  await Dialog.alert(
+    `Successfully imported "${title}" with ${words.length} word(s)!`,
+  );
 }
 
 // Add a deck from manually entered words (title required)
@@ -420,8 +439,8 @@ async function addManualWords() {
   if (invalidWords.length > 0) {
     await Dialog.alert(
       `Invalid words detected: ${invalidWords.join(
-        ", "
-      )}\n\nWords should only contain letters, spaces, hyphens, or apostrophes.`
+        ", ",
+      )}\n\nWords should only contain letters, spaces, hyphens, or apostrophes.`,
     );
     return;
   }
@@ -487,7 +506,7 @@ async function checkSpelling(words) {
         // Check if it's a rate limit error
         if (response.status === 429) {
           console.warn(
-            "LanguageTool rate limit reached, using fallback spell check"
+            "LanguageTool rate limit reached, using fallback spell check",
           );
           return fallbackSpellCheck(words);
         }
@@ -507,10 +526,10 @@ async function checkSpelling(words) {
           ) {
             const errorText = text.substring(
               match.offset,
-              match.offset + match.length
+              match.offset + match.length,
             );
             const word = batch.find(
-              (w) => w.toLowerCase() === errorText.toLowerCase()
+              (w) => w.toLowerCase() === errorText.toLowerCase(),
             );
 
             if (word && !suspicious.find((s) => s.word === word)) {
@@ -599,7 +618,7 @@ function showSpellingWarning(suspicious) {
       const suggestionText =
         item.suggestions && item.suggestions.length > 0
           ? `<div style="color: #10b981; font-size: 0.9em; margin-top: 4px;">Suggestions: ${item.suggestions.join(
-              ", "
+              ", ",
             )}</div>`
           : "";
       return `<div style="margin-bottom: 12px;">
@@ -616,8 +635,8 @@ function showSpellingWarning(suspicious) {
 // Cancel spelling - clear pending words
 function cancelSpelling() {
   spellingModal.classList.remove("show");
-//   pendingWords = [];
-//   manualInput.value = "";
+  //   pendingWords = [];
+  //   manualInput.value = "";
 }
 
 // Proceed with spelling - accept the words
@@ -645,7 +664,7 @@ async function startGame() {
   gameSettings.randomize = randomizeCheckbox.checked;
   gameSettings.pronounceCount = parseInt(pronounceCountSelect.value);
   gameSettings.pronounceInterval = parseInt(pronounceIntervalSelect.value);
-  
+
   // Save settings to localStorage
   saveSettingsToLocalStorage();
 
@@ -711,7 +730,9 @@ const LEAD_IN = "... ";
 function speakWord(word, onend) {
   synth.cancel();
   const needsLeadIn = !selectedVoice || !selectedVoice.localService;
-  const speech = new SpeechSynthesisUtterance(needsLeadIn ? LEAD_IN + word : word);
+  const speech = new SpeechSynthesisUtterance(
+    needsLeadIn ? LEAD_IN + word : word,
+  );
   speech.lang = "en-US";
   speech.rate = 0.8;
   if (selectedVoice) speech.voice = selectedVoice;
@@ -835,7 +856,7 @@ function showFeedback(message, isCorrect, pronounce, showWrongButton = false) {
 
   // Show modal
   feedbackModal.classList.add("show");
-  
+
   // Show appropriate button layout
   if (showWrongButton) {
     feedbackButtons.style.display = "none";
@@ -861,16 +882,16 @@ function closeFeedback() {
 // Mark as wrong from feedback (user clicked "I Got It Wrong" after "I Know It")
 function markFeedbackAsWrong() {
   const word = vocabulary[currentWordIndex];
-  
+
   // Find the last result for this word and update it
   const lastResult = results[results.length - 1];
   if (lastResult && lastResult.word === word) {
     lastResult.correct = false;
   }
-  
+
   // Add to unmemorized words
   addToUnmemorized(word);
-  
+
   // Close feedback and move to next word
   feedbackModal.classList.remove("show");
   synth.cancel();
@@ -915,13 +936,13 @@ function showResults() {
       const statusClass = r.known
         ? "known"
         : r.correct
-        ? "correct"
-        : "incorrect";
+          ? "correct"
+          : "incorrect";
       const statusText = r.known
         ? "Known"
         : r.correct
-        ? `✓ ${r.answer}`
-        : `✗ ${r.answer || "(no answer)"}`;
+          ? `✓ ${r.answer}`
+          : `✗ ${r.answer || "(no answer)"}`;
 
       return `
             <div class="result-item ${statusClass}">
@@ -977,7 +998,7 @@ function shuffle(array) {
 // Unmemorized words management
 function addToUnmemorized(word) {
   const lowerWord = word.toLowerCase();
-  if (!unmemorizedWords.find(w => w.toLowerCase() === lowerWord)) {
+  if (!unmemorizedWords.find((w) => w.toLowerCase() === lowerWord)) {
     unmemorizedWords.push(word);
     saveUnmemorizedToLocalStorage();
     displayUnmemorized();
@@ -986,7 +1007,9 @@ function addToUnmemorized(word) {
 
 function removeFromUnmemorized(word) {
   const lowerWord = word.toLowerCase();
-  const index = unmemorizedWords.findIndex(w => w.toLowerCase() === lowerWord);
+  const index = unmemorizedWords.findIndex(
+    (w) => w.toLowerCase() === lowerWord,
+  );
   if (index !== -1) {
     unmemorizedWords.splice(index, 1);
     saveUnmemorizedToLocalStorage();
@@ -1002,12 +1025,12 @@ async function practiceUnmemorized() {
 
   // Use unmemorized words as vocabulary
   vocabulary = [...unmemorizedWords];
-  
+
   // Get settings
   gameSettings.randomize = randomizeCheckbox.checked;
   gameSettings.pronounceCount = parseInt(pronounceCountSelect.value);
   gameSettings.pronounceInterval = parseInt(pronounceIntervalSelect.value);
-  
+
   // Save settings to localStorage
   saveSettingsToLocalStorage();
 
@@ -1033,7 +1056,11 @@ async function clearUnmemorized() {
     return;
   }
 
-  if (await Dialog.confirm(`Clear all ${unmemorizedWords.length} unmemorized words?`)) {
+  if (
+    await Dialog.confirm(
+      `Clear all ${unmemorizedWords.length} unmemorized words?`,
+    )
+  ) {
     unmemorizedWords = [];
     saveUnmemorizedToLocalStorage();
     displayUnmemorized();
@@ -1069,7 +1096,7 @@ function loadFromLocalStorage() {
     // No vocabulary in localStorage, load sample data automatically
     loadSampleDataAuto();
   }
-  
+
   // Load unmemorized words
   const storedUnmemorized = localStorage.getItem("unmemorizedWords");
   if (storedUnmemorized) {
@@ -1080,7 +1107,7 @@ function loadFromLocalStorage() {
       console.error("Failed to load unmemorized words from localStorage", e);
     }
   }
-  
+
   // Load game settings
   const storedSettings = localStorage.getItem("gameSettings");
   if (storedSettings) {
@@ -1089,7 +1116,7 @@ function loadFromLocalStorage() {
       gameSettings.randomize = loaded.randomize || false;
       gameSettings.pronounceCount = loaded.pronounceCount || 2;
       gameSettings.pronounceInterval = loaded.pronounceInterval || 1000;
-      
+
       // Update UI
       randomizeCheckbox.checked = gameSettings.randomize;
       pronounceCountSelect.value = gameSettings.pronounceCount;
@@ -1118,10 +1145,14 @@ function loadAvailableDecks() {
     deckSelect.innerHTML = '<option value="">No decks available</option>';
     loadDeckBtn.disabled = true;
   } else {
-    deckSelect.innerHTML = '<option value="">-- Select a deck --</option>' +
-      availableDecks.map((deck, index) => 
-        `<option value="${index}">${deck.url ? (deck.url.startsWith("file:") ? "📄 " : deck.url.startsWith("manual:") ? "✏️ " : "🌐 ") : ""}${deck.title}</option>`
-      ).join('');
+    deckSelect.innerHTML =
+      '<option value="">-- Select a deck --</option>' +
+      availableDecks
+        .map(
+          (deck, index) =>
+            `<option value="${index}">${deck.url ? (deck.url.startsWith("file:") ? "📄 " : deck.url.startsWith("manual:") ? "✏️ " : "🌐 ") : ""}${deck.title}</option>`,
+        )
+        .join("");
     loadDeckBtn.disabled = false;
   }
   renderCurrentDeck();
@@ -1131,31 +1162,78 @@ function loadAvailableDecks() {
 function loadVoices() {
   // Get all voices
   const voices = synth.getVoices();
-  
+
   // Filter English voices
-  availableVoices = voices.filter(voice => 
-    voice.lang.startsWith('en-') || voice.lang.startsWith('en_')
+  availableVoices = voices.filter(
+    (voice) => voice.lang.startsWith("en-") || voice.lang.startsWith("en_"),
   );
-  
+
   if (availableVoices.length === 0) {
-    voiceSelect.innerHTML = '<option value="">No English voices available</option>';
+    voiceSelect.innerHTML =
+      '<option value="">No English voices available</option>';
+    scheduleVoiceHints();
     return;
   }
-  
+
   // Populate voice selector
-  voiceSelect.innerHTML = '<option value="">Default voice</option>' +
-    availableVoices.map((voice, index) => {
-      const lang = voice.lang.replace('_', '-');
-      const label = `${voice.name} (${lang}) · ${voice.localService ? "Local" : "Online"}`;
-      return `<option value="${index}">${label}</option>`;
-    }).join('');
-  
-  // Load saved voice preference
-  const savedVoiceIndex = localStorage.getItem('selectedVoiceIndex');
+  voiceSelect.innerHTML =
+    '<option value="">Default voice</option>' +
+    availableVoices
+      .map((voice, index) => {
+        const lang = voice.lang.replace("_", "-");
+        const label = `${voice.name} (${lang}) · ${voice.localService ? "Local" : "Online"}`;
+        return `<option value="${index}">${label}</option>`;
+      })
+      .join("");
+
+  // Load saved voice preference ("" = user explicitly chose the default voice)
+  const savedVoiceIndex = localStorage.getItem("selectedVoiceIndex");
   if (savedVoiceIndex && availableVoices[savedVoiceIndex]) {
     voiceSelect.value = savedVoiceIndex;
     selectedVoice = availableVoices[savedVoiceIndex];
+  } else if (savedVoiceIndex === null) {
+    // No choice made yet: prefer a Natural en-US voice, then any Natural English voice
+    const natural = availableVoices.filter((v) => /natural/i.test(v.name));
+    const best =
+      natural.find((v) => v.lang.replace("_", "-") === "en-US") || natural[0];
+    if (best) {
+      selectedVoice = best;
+      voiceSelect.value = String(availableVoices.indexOf(best));
+    }
   }
+
+  scheduleVoiceHints();
+}
+
+// Voice hints under the Voice menu:
+// - no English voice at all: explain how to install one (Android-specific steps on Android)
+// - Windows without any Natural voice: suggest Edge (plus a dialog once per browser session)
+// Voices arrive asynchronously, so wait until the list has settled before checking.
+function scheduleVoiceHints() {
+  clearTimeout(voiceHintTimer);
+  voiceHintTimer = setTimeout(async () => {
+    const ua = navigator.userAgent;
+    const isAndroid = /Android/i.test(ua);
+    const isWindows = /Windows/i.test(ua);
+    const isEdge = /\bEdg\//.test(ua);
+    const noVoices = availableVoices.length === 0;
+    const hasNatural = availableVoices.some((v) => /natural/i.test(v.name));
+
+    const missingEl = document.getElementById("voiceMissing");
+    missingEl.textContent = isAndroid
+      ? "⚠️ 這台裝置沒有英文語音。請到 設定 › 文字轉語音輸出，安裝「Google 語音服務」並下載英文語音資料，然後重新整理本頁。"
+      : "⚠️ 這台裝置沒有英文語音。請在系統的語音設定中安裝英文語音，然後重新整理本頁。";
+    missingEl.hidden = !noVoices;
+
+    const suggestEdge = !noVoices && isWindows && !isEdge && !hasNatural;
+    document.getElementById("voiceHint").hidden = !suggestEdge;
+    if (!suggestEdge || sessionStorage.getItem("naturalHintShown")) return;
+    sessionStorage.setItem("naturalHintShown", "1");
+    await Dialog.alert(
+      "For better voice quality on Windows, open this app in Microsoft Edge (Natural voices).\n\n" +
+        "建議使用 Edge 瀏覽器開啟，可使用更自然的 Natural 語音。",
+    );
+  }, 2000);
 }
 
 // Voices might load asynchronously on some browsers
@@ -1166,12 +1244,12 @@ if (synth.onvoiceschanged !== undefined) {
 // Handle voice change
 function handleVoiceChange() {
   const index = voiceSelect.value;
-  if (index === '') {
+  if (index === "") {
     selectedVoice = null;
-    localStorage.removeItem('selectedVoiceIndex');
+    localStorage.setItem("selectedVoiceIndex", ""); // explicit "default voice" choice
   } else {
     selectedVoice = availableVoices[index];
-    localStorage.setItem('selectedVoiceIndex', index);
+    localStorage.setItem("selectedVoiceIndex", index);
   }
 }
 
@@ -1210,35 +1288,41 @@ function testVoice() {
 // Load selected deck
 async function loadSelectedDeck() {
   const selectedIndex = deckSelect.value;
-  
+
   if (!selectedIndex) {
-    await Dialog.alert('Please select a deck!');
+    await Dialog.alert("Please select a deck!");
     return;
   }
-  
+
   const deck = availableDecks[selectedIndex];
-  
+
   if (!deck) {
-    await Dialog.alert('Invalid deck selected!');
+    await Dialog.alert("Invalid deck selected!");
     return;
   }
-  
+
   // Show confirmation dialog
-  if (!(await Dialog.confirm(`Load "${deck.title}"?\n\nThis will replace your current vocabulary list.`))) {
+  if (
+    !(await Dialog.confirm(
+      `Load "${deck.title}"?\n\nThis will replace your current vocabulary list.`,
+    ))
+  ) {
     return;
   }
-  
+
   // Parse words from the deck
   const words = parseDeckWords(deck.words);
-  
+
   if (words.length === 0) {
-    await Dialog.alert('No words found in the deck!');
+    await Dialog.alert("No words found in the deck!");
     return;
   }
-  
+
   vocabulary = words;
   saveToLocalStorage();
   setCurrentDeck(deck.title);
   displayVocabulary();
-  await Dialog.alert(`Successfully loaded "${deck.title}" with ${words.length} word(s)!`);
+  await Dialog.alert(
+    `Successfully loaded "${deck.title}" with ${words.length} word(s)!`,
+  );
 }
