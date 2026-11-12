@@ -1184,11 +1184,7 @@ function loadVoices() {
   const usUk = english.filter((voice) => /^en-(US|GB)$/i.test(normLang(voice)));
   const candidates = usUk.length > 0 ? usUk : english;
 
-  // Hide Google's online voices (Chrome): they clip the start of words and the lead-in
-  // that fixes it is clearly audible. Keep them only if nothing else is available.
-  const isGoogleOnline = (voice) => /google/i.test(voice.name) && !voice.localService;
-  const withoutGoogle = candidates.filter((voice) => !isGoogleOnline(voice));
-  availableVoices = withoutGoogle.length > 0 ? withoutGoogle : candidates;
+  availableVoices = candidates;
 
   if (availableVoices.length === 0) {
     voiceSelect.innerHTML =
@@ -1254,32 +1250,6 @@ function scheduleVoiceHints() {
     const suggestEdge = !noVoices && isWindows && !isEdge && !hasNatural;
     document.getElementById("voiceHint").hidden = !suggestEdge;
   }, 2000);
-}
-
-// Google Chrome on Windows (not Edge/Brave/Opera, which are Chromium too)
-function isWindowsChrome() {
-  const uad = navigator.userAgentData;
-  if (uad) {
-    return (
-      uad.platform === "Windows" &&
-      uad.brands.some((b) => b.brand === "Google Chrome")
-    );
-  }
-  const ua = navigator.userAgent;
-  return /Windows/i.test(ua) && /Chrome\//.test(ua) && !/Edg\/|OPR\/|Brave/.test(ua);
-}
-
-// In Chrome on Windows, suggest Edge once per browser session: sessionStorage lives as long
-// as the tab/window, so reloading doesn't repeat it but opening the app again does.
-// (Chrome has no Natural voices, Edge does.)
-if (isWindowsChrome() && !sessionStorage.getItem("edgeHintShown")) {
-  setTimeout(async () => {
-    sessionStorage.setItem("edgeHintShown", "1");
-    await Dialog.alert(
-      "For better voice quality on Windows, open this app in Microsoft Edge (Natural voices).\n\n" +
-        "建議使用 Edge 瀏覽器開啟，可使用更自然的 Natural 語音。",
-    );
-  }, 600);
 }
 
 // Voices might load asynchronously on some browsers
