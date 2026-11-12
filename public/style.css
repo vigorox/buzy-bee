@@ -813,6 +813,7 @@ hr {
 .result-item.correct { background: var(--mint); }
 .result-item.incorrect { background: var(--rose); }
 .result-item.known { background: var(--lavender); }
+.no-mistakes { text-align: center; font-weight: 700; color: var(--ink); }
 
 .result-word { font-weight: 700; }
 .result-status { font-size: 0.9em; font-weight: 600; }

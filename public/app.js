@@ -2,6 +2,8 @@
 let vocabulary = [];
 let currentWordIndex = 0;
 let results = [];
+let gameActive = false; // false once the game is exited/finished, so late timers/speech callbacks do nothing
+let pronounceTimer = null;
 let unmemorizedWords = []; // Store unmemorized words
 let availableVoices = []; // Store available English voices
 let selectedVoice = null; // Store selected voice
@@ -678,6 +680,7 @@ async function startGame() {
   vocabulary = gameWords;
   currentWordIndex = 0;
   results = [];
+  gameActive = true;
 
   // Switch to game page
   showPage("game");
@@ -706,6 +709,7 @@ function playCurrentWord() {
 
 // Pronounce word multiple times
 function pronounceWord(word) {
+  if (!gameActive) return;
   if (shouldSkip || pronunciationCount >= gameSettings.pronounceCount) {
     showAnswerPhase();
     return;
@@ -716,7 +720,7 @@ function pronounceWord(word) {
 
   currentSpeech = speakWord(word, () => {
     // Wait a bit before next pronunciation
-    setTimeout(() => {
+    pronounceTimer = setTimeout(() => {
       pronounceWord(word);
     }, gameSettings.pronounceInterval);
   });
@@ -907,6 +911,7 @@ function markFeedbackAsWrong() {
 
 // Move to next word
 function nextWord() {
+  if (!gameActive) return;
   setBeeMood("normal");
   currentWordIndex++;
 
@@ -937,29 +942,22 @@ function showResults() {
     resultMessage.textContent = "💪 Keep practicing! You can do it!";
   }
 
-  // Display detailed results
-  resultList.innerHTML = results
-    .map((r) => {
-      const statusClass = r.known
-        ? "known"
-        : r.correct
-          ? "correct"
-          : "incorrect";
-      const statusText = r.known
-        ? "Known"
-        : r.correct
-          ? `✓ ${r.answer}`
-          : `✗ ${r.answer || "(no answer)"}`;
-
-      return `
-            <div class="result-item ${statusClass}">
+  // Display only the wrong words
+  const wrong = results.filter((r) => !r.correct);
+  resultList.innerHTML = wrong.length
+    ? wrong
+        .map(
+          (r) => `
+            <div class="result-item incorrect">
                 <span class="result-word">${r.word}</span>
-                <span class="result-status">${statusText}</span>
+                <span class="result-status">✗ ${r.answer || "(no answer)"}</span>
             </div>
-        `;
-    })
-    .join("");
+        `,
+        )
+        .join("")
+    : `<p class="no-mistakes">No mistakes 🎉</p>`;
 
+  gameActive = false;
   showPage("result");
 }
 
@@ -971,9 +969,17 @@ function backToMain() {
 
 // Exit game during practice
 async function exitGame() {
-  if (await Dialog.confirm("Exit game? Your progress will not be saved.")) {
+  if (await Dialog.confirm("Exit game? You will see the results of the words answered so far.")) {
+    // Stop everything still running (speech callbacks, repeat timer, open feedback)
+    gameActive = false;
+    clearTimeout(pronounceTimer);
+    if (currentSpeech) currentSpeech.onend = null;
     synth.cancel();
-    showPage("main");
+    feedbackModal.classList.remove("show");
+    setBeeMood("normal");
+    // Show the results of the words answered so far (nothing answered → back to main)
+    if (results.length > 0) showResults();
+    else showPage("main");
   }
 }
 
@@ -1051,6 +1057,7 @@ async function practiceUnmemorized() {
   vocabulary = gameWords;
   currentWordIndex = 0;
   results = [];
+  gameActive = true;
 
   // Switch to game page
   showPage("game");
